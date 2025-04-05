@@ -17,6 +17,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ViewField;
 use Illuminate\Database\Eloquent\Builder;
+use App\Settings\PromptSettings;
 
 class UserAssessmentResource extends Resource
 {
@@ -177,6 +178,7 @@ class UserAssessmentResource extends Resource
                     ->sortable()
                     ->label(__('Start Date')),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
@@ -214,5 +216,17 @@ class UserAssessmentResource extends Resource
             'view' => Pages\ViewUserAssessment::route('/{record}'),
             'edit' => Pages\EditUserAssessment::route('/{record}/edit'),
         ];
+    }
+
+    public function someMethod()
+    {
+        $settings = app(PromptSettings::class);
+
+        // Access the prompts
+        $documentsPrompt = $settings->documents_prompt;
+        $assessmentPrompt = $settings->assessment_prompt;
+        $fullPrompt = $settings->full_prompt;
+
+        // Use them as needed
     }
 }

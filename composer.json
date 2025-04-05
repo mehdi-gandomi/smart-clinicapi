@@ -7,11 +7,13 @@
     "require": {
         "php": "^8.2",
         "filament/filament": "^3.3",
+        "filament/spatie-laravel-settings-plugin": "^3.3",
         "guzzlehttp/guzzle": "^7.8",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.11",
         "openai-php/client": "^0.10.3",
+        "spatie/laravel-settings": "^3.4",
         "stechstudio/filament-impersonate": "^3.15"
     },
     "require-dev": {

@@ -13,6 +13,7 @@ use Filament\Infolists\Components\ViewEntry;
 use Filament\Actions\Action;
 use App\Jobs\ProcessGptAssessment;
 use App\Models\AssessmentSeries;
+use App\Settings\PromptSettings;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
@@ -26,7 +27,96 @@ class ViewUserAssessment extends ViewRecord
 
     public ?string $assessmentPrompt = null;
     public ?string $documentsPrompt = null;
+    public ?string $fullPrompt = null;
     public ?string $gptResponse = null;
+    public ?string $documentsPromptAdditional = null;
+    public ?string $assessmentPromptAdditional = null;
+    public ?string $fullPromptAdditional = null;
+    public function generateFullPrompt(): string
+    {
+        $formattedText = __('Patient Personal Information:') . "\n";
+        $formattedText .= "- نام و نام خانوادگی: {$this->record->user->first_name} {$this->record->user->last_name}\n";
+        $formattedText .= "- سن: {$this->record->user->age}\n";
+        $formattedText .= "- جنسیت: " . ($this->record->user->gender == 1 ? 'مرد' : 'زن') . "\n";
+        $formattedText .= "- قد: {$this->record->user->height} cm\n";
+        $formattedText .= "- وزن: {$this->record->user->weight} kg\n";
+        $formattedText .= "- شغل: {$this->record->user->occupation}\n";
+        $formattedText .= "- آدرس: {$this->record->user->address}\n";
+        $formattedText .= "- بیمه اصلی: {$this->record->user->primary_insurance}\n";
+        $formattedText .= "- بیمه تکمیلی: {$this->record->user->supplementary_insurance}\n\n";
+
+        $formattedText .= "پاسخ‌های ارزیابی بیمار:\n\n";
+
+        // Get all series with their questions
+        $series = AssessmentSeries::with(['questions' => function ($query) {
+            $query->orderBy('order');
+        }])->orderBy('order')->get();
+
+        // Get answers grouped by series
+        $answers = $this->record->answers()
+            ->with('question')
+            ->get()
+            ->groupBy('series_id');
+
+        // Get notes grouped by series
+        $notes = $this->record->notes()
+            ->get()
+            ->keyBy('series_id');
+
+
+
+        // Group answers by series
+        $groupedAnswers = [];
+        foreach ($series as $s) {
+            $seriesAnswers = [];
+            $seriesAnswersCollection = $answers->get($s->series_id, collect());
+
+            foreach ($s->questions as $question) {
+                $answer = $seriesAnswersCollection->first(function($a) use ($question) {
+                    return $a->question_id === $question->question_id;
+                });
+
+                if ($answer) {
+                    $seriesAnswers[] = [
+                        'question' => $question->text,
+                        'answer' => $answer->answer
+                    ];
+                }
+            }
+
+            if (!empty($seriesAnswers)) {
+                $groupedAnswers[] = [
+                    'series_title' => $s->title,
+                    'answers' => $seriesAnswers
+                ];
+            }
+        }
+
+        // Add answers to formatted text
+        foreach ($groupedAnswers as $group) {
+            $formattedText .= "{$group['series_title']}:\n";
+            foreach ($group['answers'] as $qa) {
+                $formattedText .= "- {$qa['question']}: {$qa['answer']}\n";
+            }
+            $formattedText .= "\n";
+        }
+
+        // Add notes if they exist
+        if ($notes->isNotEmpty()) {
+            $formattedText .= "یادداشت‌ها:\n";
+            foreach ($notes as $seriesId => $note) {
+                $seriesTitle = $series->firstWhere('series_id', $seriesId)->title;
+                $formattedText .= "- {$seriesTitle}: {$note->notes}\n";
+            }
+            $formattedText .= "\n";
+        }
+
+
+
+        $formattedText .= $this->fullPromptAdditional;
+
+        return $formattedText;
+    }
 
     public function generateAssessmentPrompt(): string
     {
@@ -109,15 +199,7 @@ class ViewUserAssessment extends ViewRecord
 
 
 
-        $formattedText .= "\nPlease write a comprehensive analysis of the patient's personal information and assessment answers. Include:\n";
-        $formattedText .= "1. Patient introduction and personal information analysis\n";
-        $formattedText .= "2. Risk factors identification\n";
-        $formattedText .= "3. Lifestyle status evaluation\n";
-        $formattedText .= "4. Symptom analysis (typical vs atypical in percentages)\n";
-        $formattedText .= "5. Pretest probability of CAD\n";
-        $formattedText .= "6. Differential diagnoses\n";
-        $formattedText .= "7. Economic status assessment and willingness for diagnostic tests\n";
-        $formattedText .= "\nPlease write this analysis in English, but keep patient's personal information in Original language.";
+        $formattedText .= $this->assessmentPromptAdditional;
 
         return $formattedText;
     }
@@ -137,21 +219,35 @@ class ViewUserAssessment extends ViewRecord
         ];
         $formattedText = "Patient Information:\n" . implode("\n", $personalInfo);
 
-        $formattedText.="\n\nPlease analyze these medical documents and prescriptions, providing a detailed analysis that includes:\n1. Summary of medical test results and their significance\n2. List of all medications, their dosages, and purposes\n3. Potential drug interactions or concerns\n4. Recommendations for additional tests or monitoring\n5. Overall assessment of the patient's medical documentation like Blood test,Echocardiography,ECG,Sonography and more";
+        $formattedText.="\n\n".$this->documentsPromptAdditional;
         return $formattedText;
+    }
+    protected function getPromptSettings(): PromptSettings
+    {
+        return app(PromptSettings::class);
     }
     public function mount($record): void
     {
         parent::mount($record);
+        $settings = $this->getPromptSettings();
+        $this->documentsPromptAdditional = $settings->documents_prompt;
+        $this->assessmentPromptAdditional = $settings->assessment_prompt;
+        $this->fullPromptAdditional = $settings->full_prompt;
         $this->assessmentPrompt = $this->generateAssessmentPrompt();
         $this->documentsPrompt = $this->generateDocsPrompt();
+        $this->fullPrompt=$this->generateFullPrompt();
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            ActionGroup::make([
-                Action::make('editAssessmentPrompt')
+            // ActionGroup::make([
+
+            // ])
+            // ->label(__('GPT Analysis'))
+            // ->icon('heroicon-o-cpu-chip')
+            // ->color('primary'),
+            Action::make('editAssessmentPrompt')
                     ->label(__('Assessment Analysis'))
                     ->color('success')
                     ->icon('heroicon-o-user')
@@ -269,10 +365,37 @@ class ViewUserAssessment extends ViewRecord
                                 ->send();
                         }
                     }),
-            ])
-            ->label(__('GPT Analysis'))
-            ->icon('heroicon-o-cpu-chip')
-            ->color('primary'),
+
+
+                    Action::make('editFullPrompt')
+                    ->label(__('Full Analysis'))
+                    ->color('warning')
+                    ->icon('heroicon-o-document-text')
+                    ->modalWidth('7xl')
+                    ->modalHeading(__('Medical Documents and Assessment Analysis'))
+                    ->modalDescription(__('Review medical documents and assessment and send to GPT for analysis'))
+                    // ->visible(fn () => $this->record->medicalDocuments()->count() > 0 || $this->record->drugsDocuments()->count() > 0)
+                    ->form([
+                        Forms\Components\Textarea::make('fullPrompt')
+                            ->label('')
+                            ->default(fn () => $this->fullPrompt)
+                            ->rows(20)
+                            ->required()
+                            ->columnSpanFull(),
+                    ])
+                    ->modalSubmitActionLabel(__('Send to GPT'))
+                    ->modalCancelActionLabel(__('Cancel'))
+                    ->action(function (array $data) {
+                        if ($this->processFullPrompt()) {
+                            $this->record->refresh();
+                        } else {
+
+                            Notification::make()
+                                ->danger()
+                                ->title(__('Failed to process documents'))
+                                ->send();
+                        }
+                    }),
         ];
     }
 
@@ -329,7 +452,7 @@ class ViewUserAssessment extends ViewRecord
                     ])
                     ->collapsible(),
 
-                Section::make(__('GPT Report'))
+                Section::make(__('Assistant Report'))
                     ->schema([
                         TextEntry::make('gpt_error')
                             ->label(__('GPT Error'))
@@ -337,39 +460,65 @@ class ViewUserAssessment extends ViewRecord
                             ->visible(fn ($record) => !empty($record->gpt_error))
                             ->columnSpanFull(),
 
+                        Section::make(__('Full Analysis'))
+                            ->schema([
+                                TextEntry::make('full_response')
+                                    ->markdown()
+                                    ->label(__('Full Analysis Result'))
+                                    ->columnSpanFull(),
+
+                                Section::make(__('Full Analysis Prompt'))
+                                    ->schema([
+                                        TextEntry::make('full_prompt')
+                                            ->html()
+                                            ->formatStateUsing(fn ($state) => nl2br(e($state)))
+                                            ->label(__('Full Prompt'))
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed(),
+                            ])
+                            ->collapsible()
+                            ->visible(fn ($record) => !empty($record->full_response) || !empty($record->full_prompt)),
+
                         Section::make(__('Documents Analysis'))
                             ->schema([
-                                TextEntry::make('documents_prompt')
-                                    ->html()
-                                    ->formatStateUsing(fn ($state) => nl2br(e($state)))
-                                    ->label(__('Documents Prompt'))
-                                    ->columnSpanFull()
-                                    ->hidden(fn ($state) => empty($state)),
-
                                 TextEntry::make('documents_response')
                                     ->markdown()
                                     ->label(__('Documents Analysis Result'))
-                                    ->columnSpanFull()
-                                    ->visible(fn ($record) => !empty($record->documents_response)),
+                                    ->columnSpanFull(),
+
+                                Section::make(__('Documents Analysis Prompt'))
+                                    ->schema([
+                                        TextEntry::make('documents_prompt')
+                                            ->html()
+                                            ->formatStateUsing(fn ($state) => nl2br(e($state)))
+                                            ->label(__('Documents Prompt'))
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed(),
                             ])
-                            ->collapsible(),
+                            ->collapsible()
+                            ->visible(fn ($record) => !empty($record->documents_response) || !empty($record->documents_prompt)),
 
                         Section::make(__('Assessment Analysis'))
                             ->schema([
-                                TextEntry::make('assessment_prompt')
-                                    ->html()
-                                    ->formatStateUsing(fn ($state) => nl2br(e($state)))
-                                    ->label(__('Assessment Prompt'))
-                                    ->columnSpanFull()
-                                    ->hidden(fn ($state) => empty($state)),
-
                                 TextEntry::make('assessment_response')
                                     ->markdown()
                                     ->label(__('Assessment Analysis Result'))
-                                    ->columnSpanFull()
-                                    ->visible(fn ($record) => !empty($record->assessment_response)),
+                                    ->columnSpanFull(),
+
+                                Section::make(__('Assessment Analysis Prompt'))
+                                    ->schema([
+                                        TextEntry::make('assessment_prompt')
+                                            ->html()
+                                            ->formatStateUsing(fn ($state) => nl2br(e($state)))
+                                            ->label(__('Assessment Prompt'))
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->collapsed(),
                             ])
-                            ->collapsible(),
+                            ->collapsible()
+                            ->visible(fn ($record) => !empty($record->assessment_response) || !empty($record->assessment_prompt)),
                     ])
                     ->collapsible(),
             ]);
@@ -529,6 +678,142 @@ class ViewUserAssessment extends ViewRecord
                         $this->record->update([
                             'documents_prompt' => $formattedText,
                             'documents_response' => $content,
+                            'gpt_error' => null,
+                        ]);
+                        return true;
+                    }
+                }
+
+                // Log detailed error information
+                Log::error('OpenAI API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'assessment_id' => $this->record->id,
+                    'user_id' => $this->record->user_id
+                ]);
+
+                $this->record->update([
+                    'gpt_error' => 'Failed to get response from OpenAI API\n'.$response->body(),
+                ]);
+                return false;
+            }
+
+            Log::error('No images found to analyze', [
+                'assessment_id' => $this->record->id,
+                'user_id' => $this->record->user_id
+            ]);
+            $this->record->update([
+                'gpt_error' => 'No images found to analyze',
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Document processing error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'assessment_id' => $this->record->id,
+                'user_id' => $this->record->user_id
+            ]);
+            $this->record->update([
+                'gpt_error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    protected function processFullPrompt(): bool
+    {
+        try {
+            $medicalDocs = $this->record->medicalDocuments()->get();
+            $drugDocs = $this->record->drugsDocuments()->get();
+
+            $allImages = [];
+            $formattedText = $this->fullPrompt;
+
+            // Process medical documents
+            if ($medicalDocs->isNotEmpty()) {
+
+                foreach ($medicalDocs as $doc) {
+
+
+                    foreach ($doc->files as $file) {
+                        $imagePath = Storage::disk('public')->path($file['path']);
+                        $imageData = file_get_contents($imagePath);
+                        $base64Image = base64_encode($imageData);
+                        $mimeType = $file['mime_type'] ?? 'image/jpeg';
+                        $allImages[] = [
+                            'type' => 'image_url',
+                            'image_url' => [
+                                'url'=>"data:{$mimeType};base64,{$base64Image}"
+                            ]
+                        ];
+                    }
+                }
+            }
+
+            // Process drug documents
+            if ($drugDocs->isNotEmpty()) {
+
+                foreach ($drugDocs as $doc) {
+
+                    foreach ($doc->files as $file) {
+                        $imagePath = Storage::disk('public')->path($file['path']);
+                        $imageData = file_get_contents($imagePath);
+                        $base64Image = base64_encode($imageData);
+                        $mimeType = $file['mime_type'] ?? 'image/jpeg';
+
+
+
+                        $allImages[] = [
+                            'type' => 'image_url',
+                            'image_url' => [
+                                'url'=>"data:{$mimeType};base64,{$base64Image}"
+                            ]
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($allImages)) {
+
+                $requestData = [
+                    'model' => 'gpt-4o',
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'You are a medical assistant analyzing medical documents, test results, and prescriptions. Please provide a comprehensive analysis of these medical documents in the context of the patient information provided.',
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => [
+                                [
+                                    'type' => 'text',
+                                    'text' => $formattedText,
+                                ],
+                                ...$allImages
+                            ],
+                        ],
+                    ],
+                    'max_tokens' => 4000,
+                ];
+
+                // Log the complete request data (excluding sensitive information)
+                Log::info('GPT API Request Data', $requestData);
+
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . config('services.openai.api_key'),
+                    'Content-Type' => 'application/json',
+                ])->post('https://api.openai.com/v1/chat/completions', $requestData);
+
+
+                if ($response->successful()) {
+                    $content = $response->json('choices.0.message.content');
+                    if ($content) {
+                        // Log the successful response content length
+                        Log::info('GPT API response content', ['response'=>$content]);
+
+                        $this->record->update([
+                            'full_prompt' => $formattedText,
+                            'full_response' => $content,
                             'gpt_error' => null,
                         ]);
                         return true;
