@@ -71,6 +71,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         ->where('path', '.*'); // Allow slashes in the path parameter
 
     // Online Visits
-    Route::post('online-visits', [OnlineVisitController::class, 'store']);
-    Route::get('online-visits', [OnlineVisitController::class, 'index']);
+    Route::post('/online-visits', [OnlineVisitController::class, 'store']);
+    Route::get('/online-visits', [OnlineVisitController::class, 'index']);
+    Route::delete('/online-visits/{onlineVisit}', [OnlineVisitController::class, 'destroy']);
 });

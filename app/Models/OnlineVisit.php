@@ -18,12 +18,17 @@ class OnlineVisit extends Model
         'medical_documents',
         'status',
         'answer',
+        'voice_answer',
+        'voice_answer_duration',
         'answered_at'
     ];
 
     protected $casts = [
         'medical_documents' => 'array',
-        'voice_note_path' => 'array'
+        'voice_note_path' => 'array',
+        'answered_at' => 'datetime',
+        'voice_answer' => 'string',
+        'voice_answer_duration' => 'string'
     ];
 
     /**

@@ -68,6 +68,19 @@ class OnlineVisitResource extends Resource
                             ])
                             ->required()
                             ->label('وضعیت'),
+                        Forms\Components\Textarea::make('answer')
+                            ->label('پاسخ متنی')
+                            ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('voice_answer')
+                            ->label('پاسخ صوتی')
+                            ->acceptedFileTypes(['audio/mpeg', 'audio/wav', 'audio/mp3'])
+                            ->maxSize(10240)
+                            ->directory('voice-answers')
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('voice_answer_duration')
+                            ->label('مدت زمان پاسخ صوتی')
+                            ->placeholder('مثال: 2:30')
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
@@ -86,36 +99,52 @@ class OnlineVisitResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('نام بیمار')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('visit_type')
                     ->label('نوع ویزیت')
+                    ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'medical_questions' => 'سوالات پزشکی',
                         'document_review' => 'بررسی مدارک',
                         'prescription_renewal' => 'تمدید نسخه',
                         default => $state,
-                    }),
+                    })
+                    ->colors([
+                        'primary' => 'medical_questions',
+                        'success' => 'document_review',
+                        'warning' => 'prescription_renewal',
+                    ]),
                 Tables\Columns\TextColumn::make('status')
                     ->label('وضعیت')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'in_progress' => 'info',
-                        'answered' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'secondary',
-                    })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'در انتظار بررسی',
                         'in_progress' => 'در حال بررسی',
                         'answered' => 'پاسخ داده شده',
                         'cancelled' => 'لغو شده',
                         default => $state,
-                    }),
+                    })
+                    ->colors([
+                        'warning' => 'pending',
+                        'primary' => 'in_progress',
+                        'success' => 'answered',
+                        'danger' => 'cancelled',
+                    ]),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('تاریخ درخواست')
+                    ->label('تاریخ ایجاد')
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable(),
+                Tables\Columns\IconColumn::make('answer')
+                    ->label('پاسخ متنی')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle'),
+                Tables\Columns\IconColumn::make('voice_answer')
+                    ->label('پاسخ صوتی')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-speaker-wave')
+                    ->falseIcon('heroicon-o-speaker-x-mark'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -136,6 +165,7 @@ class OnlineVisitResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
