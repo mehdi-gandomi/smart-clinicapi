@@ -18,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ViewField;
 use Illuminate\Database\Eloquent\Builder;
 use App\Settings\PromptSettings;
+use Illuminate\Database\Eloquent\Model;
 
 class UserAssessmentResource extends Resource
 {
@@ -30,7 +31,15 @@ class UserAssessmentResource extends Resource
     protected static ?string $modelLabel = 'Assessment';
 
     protected static ?string $pluralModelLabel = 'Assessments';
+    public static function canCreate(): bool
+    {
+        return false;
+    }
 
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
     public static function form(Form $form): Form
     {
         return $form

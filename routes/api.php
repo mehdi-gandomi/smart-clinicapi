@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\UserDrugController;
 use App\Http\Controllers\Api\UserMedicalDocController;
 use App\Http\Controllers\Api\UserAssessmentAdditionalInfoController;
 use App\Http\Controllers\Api\MedicalDocController;
+use App\Http\Controllers\Api\OnlineVisitController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,4 +69,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/medical-docs', [MedicalDocController::class, 'index']);
     Route::get('/medical-docs/download/{path}', [MedicalDocController::class, 'download'])
         ->where('path', '.*'); // Allow slashes in the path parameter
+
+    // Online Visits
+    Route::post('online-visits', [OnlineVisitController::class, 'store']);
+    Route::get('online-visits', [OnlineVisitController::class, 'index']);
 });

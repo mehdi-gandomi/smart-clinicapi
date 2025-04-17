@@ -628,7 +628,7 @@ class ProcessGptAssessment implements ShouldQueue
             if ($response->successful()) {
                 $content = $response->json('choices.0.message.content');
                 if ($content) {
-                    $this->assessment->update([
+            $this->assessment->update([
                         'full_prompt' => $prompt,
                         'full_response' => $content,
                         'gpt_error' => null,
