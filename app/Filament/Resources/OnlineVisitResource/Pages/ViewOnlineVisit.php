@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Forms\Components\VoiceRecorder;
+use App\Forms\Components\AudioRecorderHelper;
 
 class ViewOnlineVisit extends ViewRecord
 {
@@ -44,20 +45,24 @@ class ViewOnlineVisit extends ViewRecord
                         ->label('پاسخ متنی')
                         ->maxLength(1000)
                         ->columnSpanFull()
-                        ->required(fn ($get) => $get('answer_type') === 'text')
+                        // ->required(fn ($get) => $get('answer_type') === 'text')
                         ->visible(fn ($get) => $get('answer_type') === 'text'),
 
-                    VoiceRecorder::make('voice_answer')
-                        ->label('پاسخ صوتی')
+                    AudioRecorderHelper::make('audio_helper')
+                        ->label('ضبط صدا')
                         ->columnSpanFull()
-                        ->required(fn ($get) => $get('answer_type') === 'voice')
                         ->visible(fn ($get) => $get('answer_type') === 'voice'),
 
-                    // TextInput::make('voice_answer_duration')
-                    //     ->label('مدت زمان پاسخ صوتی')
-                    //     ->placeholder('مثال: 2:30')
-                    //     ->required(fn ($get) => $get('answer_type') === 'voice')
-                    //     ->visible(fn ($get) => $get('answer_type') === 'voice'),
+                    FileUpload::make('voice_answer')
+                        ->label('آپلود فایل صوتی')
+                        ->id('audio-upload') // Important: This ID is used to target the upload component
+                        ->helperText('فایل صوتی را از طریق دکمه دانلود در بالا دریافت کرده و سپس آپلود کنید')
+                        // ->acceptedFileTypes(['audio/mp3', 'audio/mpeg', 'audio/wav'])
+                        ->maxSize(10240) // 10MB
+                        ->columnSpanFull()
+                        ->visible(fn ($get) => $get('answer_type') === 'voice'),
+
+
                 ])
                 ->action(function (array $data) {
                     try {
@@ -65,38 +70,35 @@ class ViewOnlineVisit extends ViewRecord
                             'status' => 'answered',
                             'answered_at' => now(),
                         ];
-                        dd($data);
+
                         if ($data['answer_type'] === 'text') {
                             $updateData['answer'] = $data['answer'];
                             $updateData['voice_answer'] = null;
                             $updateData['voice_answer_duration'] = null;
-                        } else {
-                            // Handle voice answer file upload
-                            if (isset($data['voice_answer']) && $data['voice_answer'] instanceof \Illuminate\Http\UploadedFile) {
-                                $file = $data['voice_answer'];
-                                $path = $file->store('online-visits/voice-answers', 'public');
-                                $updateData['voice_answer'] = $path;
+                        } else if ($data['answer_type'] === 'voice') {
+                            // Handle voice answer
+                            if (isset($data['voice_answer']) && !empty($data['voice_answer'])) {
+                                // The voice_answer is already a filename in the public disk
+                                $filePath = storage_path('app/public/' . $data['voice_answer']);
+
+                                // Make sure to include the voice_answer in the update data
+                                $updateData['voice_answer'] = $data['voice_answer'];
 
                                 // Calculate duration using getID3
-                                $duration = $this->calculateAudioDuration($file);
-                                $updateData['voice_answer_duration'] = $duration;
-                            } else if (isset($data['voice_answer']) && is_array($data['voice_answer'])) {
-                                // Handle the case where voice_answer is an array (from our custom component)
-                                $file = $data['voice_answer'][0] ?? null;
-                                if ($file) {
-                                    $path = $file->store('online-visits/voice-answers', 'public');
-                                    $updateData['voice_answer'] = $path;
+                                $getID3 = new \getID3();
+                                $fileInfo = $getID3->analyze($filePath);
 
-                                    // Get duration from the hidden input
-                                    $updateData['voice_answer_duration'] = $data['voice_answer_duration'] ?? null;
+                                if (isset($fileInfo['playtime_seconds'])) {
+                                    $updateData['voice_answer_duration'] = (int) $fileInfo['playtime_seconds'];
                                 } else {
-                                    throw new \Exception('لطفا یک پاسخ صوتی ضبط کنید.');
+                                    // Fallback to the duration from the form if getID3 fails
+                                    $updateData['voice_answer_duration'] = $data['voice_answer_duration'] ?? null;
                                 }
+
+                                $updateData['answer'] = null;
                             } else {
                                 throw new \Exception('لطفا یک پاسخ صوتی ضبط کنید.');
                             }
-
-                            $updateData['answer'] = null;
                         }
 
                         $this->record->update($updateData);

@@ -6,5 +6,5 @@ use Filament\Forms\Components\Field;
 
 class VoiceRecorder extends Field
 {
-    protected string $view = 'components.voice-recorder-fixed-new';
+    protected string $view = 'components.voice-recorder-simple';
 }
