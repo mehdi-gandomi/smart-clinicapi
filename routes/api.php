@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\UserMedicalDocController;
 use App\Http\Controllers\Api\UserAssessmentAdditionalInfoController;
 use App\Http\Controllers\Api\MedicalDocController;
 use App\Http\Controllers\Api\OnlineVisitController;
+use App\Http\Controllers\Api\WalletController;
+use App\Models\Wallet;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,7 +39,24 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        // return $request->user();
+        $user = $request->user();
+        $wallet = $user->wallet ?? Wallet::create(['user_id' => $user->id]);
+
+        return response()->json([
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'name' => $user->name,
+            'email' => $user->email,
+            'mobile' => $user->mobile,
+            'avatar' => $user->avatar,
+            'wallet' => [
+                'id' => $wallet->id,
+                'balance' => $wallet->balance,
+                'is_active' => $wallet->is_active,
+            ]
+        ]);
     });
 
     Route::put('/user/profile', [ProfileController::class, 'update']);
@@ -74,4 +93,10 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/online-visits', [OnlineVisitController::class, 'store']);
     Route::get('/online-visits', [OnlineVisitController::class, 'index']);
     Route::delete('/online-visits/{onlineVisit}', [OnlineVisitController::class, 'destroy']);
+
+    // Wallet routes
+    Route::get('/wallet', [WalletController::class, 'show']);
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+    Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
 });
