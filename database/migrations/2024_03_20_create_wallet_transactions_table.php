@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('type', ['deposit', 'withdraw', 'transfer']);
             $table->string('description')->nullable();
             $table->string('reference_id')->nullable();
+            $table->string('transaction_id')->nullable();
             $table->string('reference_type')->nullable();
             $table->json('metadata')->nullable();
             $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');

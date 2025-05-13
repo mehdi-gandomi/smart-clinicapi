@@ -77,4 +77,12 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasOne(Wallet::class);
     }
+
+    /**
+     * Get the user's wallet transactions.
+     */
+    public function walletTransactions()
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
 }

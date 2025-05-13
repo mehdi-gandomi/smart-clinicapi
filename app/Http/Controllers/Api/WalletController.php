@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Shetabit\Multipay\Invoice;
+use Shetabit\Payment\Facade\Payment;
+use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
@@ -87,53 +90,127 @@ class WalletController extends Controller
     }
 
     /**
-     * Deposit money into wallet
+     * Charge money into wallet
      */
-    public function deposit(Request $request)
+    public function charge(Request $request)
     {
         $request->validate([
             'amount' => 'required|integer|min:1000',
             'description' => 'nullable|string'
         ]);
 
+        $wallet = Auth::user()->wallet ?? Wallet::create(['user_id' => Auth::id()]);
+        $transaction = $wallet->transactions()->create([
+            'amount' => $request->amount,
+            'description' => $request->description ?? 'شارژ کیف پول',
+            'status' => 'pending'
+        ]);
+        return Payment::callbackUrl(route('wallet.charge.callback', $transaction->id))->purchase(
+            (new Invoice)
+            ->amount($request->amount),
+            function($driver, $transactionId)use($transaction) {
+                // Store transactionId in database.
+                // We need the transactionId to verify payment in the future.
+                $transaction->update([
+                    'transaction_id' => $transactionId,
+                ]);
+            }
+        )->pay()->toJson();
+    }
+
+    public function deposit(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|integer|min:10000',
+            'description' => 'nullable|string',
+        ]);
+
         try {
-            $wallet = Auth::user()->wallet ?? Wallet::create(['user_id' => Auth::id()]);
+            $user = Auth::user();
 
-            DB::beginTransaction();
+            // Create a pending wallet transaction
+            $transaction = WalletTransaction::create([
+                'user_id' => $user->id,
+                'amount' => $request->amount,
+                'description' => $request->description ?? 'شارژ کیف پول',
+                'status' => 'pending',
+                'order_id' => Str::random(32), // Generate a unique order ID
+            ]);
 
-            $transaction = $wallet->deposit(
-                $request->amount,
-                [
-                    'description' => $request->description,
-                    'ip' => $request->ip(),
-                    'user_agent' => $request->userAgent()
-                ]
-            );
-
-            DB::commit();
+            // Get payment URL from your payment gateway
+            $paymentUrl = $this->getPaymentUrl($transaction);
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Amount deposited successfully',
-                'data' => [
-                    'transaction' => $this->formatTransaction($transaction),
-                    'wallet' => $this->formatWallet($wallet->fresh())
-                ]
+                'payment_url' => $paymentUrl,
+                'order_id' => $transaction->order_id,
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Wallet deposit failed', [
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id(),
-                'amount' => $request->amount
-            ]);
-
             return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to process deposit'
+                'message' => 'خطا در ایجاد تراکنش',
             ], 500);
         }
+    }
+
+    public function verify(Request $request)
+    {
+        $request->validate([
+            'transaction_id' => 'required|string',
+            'order_id' => 'required|string',
+            'status' => 'required|string',
+        ]);
+
+        try {
+            $user = Auth::user();
+
+            // Find the pending transaction
+            $transaction = WalletTransaction::where('order_id', $request->order_id)
+                ->where('status', 'pending')
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+
+            // Update transaction with payment gateway response
+            $transaction->transaction_id = $request->transaction_id;
+            $transaction->payment_data = $request->all();
+
+            // If payment was successful
+            if ($request->status === 'success') {
+                $transaction->status = 'completed';
+
+                // Update user's wallet balance
+                $user->increment('balance', $transaction->amount);
+
+                $message = 'پرداخت با موفقیت انجام شد';
+            } else {
+                $transaction->status = 'failed';
+                $message = 'پرداخت ناموفق بود';
+            }
+
+            $transaction->save();
+
+            return response()->json([
+                'message' => $message,
+                'status' => $transaction->status,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'خطا در تایید تراکنش',
+            ], 500);
+        }
+    }
+
+    private function getPaymentUrl(WalletTransaction $transaction)
+    {
+        // Implement your payment gateway integration here
+        // This is just a placeholder - replace with your actual payment gateway implementation
+        $baseUrl = config('services.payment.url');
+
+        return $baseUrl . '?' . http_build_query([
+            'amount' => $transaction->amount,
+            'order_id' => $transaction->order_id,
+            'callback' => route('wallet.callback'),
+        ]);
     }
 
     /**

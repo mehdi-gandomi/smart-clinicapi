@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('blood_pressures', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Link to user
-            $table->date('date'); // Date of reading
-            $table->time('time'); // Time of reading
+            $table->timestamp('date'); // Date of reading
             $table->integer('systolic'); // Systolic pressure
             $table->integer('diastolic'); // Diastolic pressure
             $table->integer('heart_rate'); // Heart rate

@@ -9,11 +9,13 @@
         "filament/filament": "^3.3",
         "filament/spatie-laravel-settings-plugin": "^3.3",
         "guzzlehttp/guzzle": "^7.8",
+        "hekmatinasser/verta": "^8.5",
         "james-heinrich/getid3": "^1.9",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.11",
         "openai-php/client": "^0.10.3",
+        "shetabit/payment": "^6.2",
         "spatie/laravel-settings": "^3.4",
         "stechstudio/filament-impersonate": "^3.15"
     },

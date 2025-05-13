@@ -14,12 +14,10 @@ class Wallet extends Model
     protected $fillable = [
         'user_id',
         'balance',
-        'is_active',
     ];
 
     protected $casts = [
-        'balance' => 'decimal:0',
-        'is_active' => 'boolean',
+        'balance' => 'integer',
     ];
 
     /**

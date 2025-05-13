@@ -98,5 +98,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/wallet', [WalletController::class, 'show']);
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::post('/wallet/charge', [WalletController::class, 'charge']);
+    Route::any('/wallet/charge/callback/{transaction}', [WalletController::class, 'chargeCallback'])->name('wallet.charge.callback');
     Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+
+    Route::middleware('auth:sanctum')->post('/blood-pressure', [\App\Http\Controllers\Api\BloodPressureController::class, 'store']);
 });

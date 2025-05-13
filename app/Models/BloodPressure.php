@@ -17,7 +17,6 @@ class BloodPressure extends Model
     protected $fillable = [
         'user_id',
         'date',
-        'time',
         'systolic',
         'diastolic',
         'heart_rate',
@@ -30,7 +29,7 @@ class BloodPressure extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'date' => 'date',
+        'date' => 'datetime',
         // 'time' => 'datetime:H:i', // Cast time if needed, though often stored as string
     ];
 

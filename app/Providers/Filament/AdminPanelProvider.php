@@ -9,7 +9,9 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentAsset;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -20,6 +22,21 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
+    public function boot(): void
+    {
+        // Register Chart.js from CDN
+        FilamentAsset::register([
+            // Register Chart.js from CDN
+            Js::make('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js'),
+
+            // You can add more external libraries as needed
+            // Js::make('some-plugin', 'https://cdn.jsdelivr.net/npm/some-plugin@version'),
+
+            // You can also register local JavaScript files
+            // Js::make('custom-scripts', resource_path('js/custom-scripts.js')),
+        ]);
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel

@@ -11,26 +11,31 @@ class WalletTransaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'wallet_id',
+        'user_id',
         'amount',
-        'type',
+        'transaction_id',
+        'order_id',
+        'state',
         'description',
-        'reference_id',
-        'reference_type',
-        'metadata',
-        'status',
+        'payment_data',
     ];
 
     protected $casts = [
-        'amount' => 'decimal:0',
-        'metadata' => 'array',
+        'amount' => 'integer',
+        'state' => 'integer',
+        'payment_data' => 'array',
     ];
 
+    // States
+    const STATE_PENDING = 0;
+    const STATE_SUCCESSFUL = 1;
+    const STATE_FAILED = 2;
+
     /**
-     * Get the wallet that owns the transaction.
+     * Get the user that owns the transaction.
      */
-    public function wallet(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Wallet::class);
+        return $this->belongsTo(User::class);
     }
 }
