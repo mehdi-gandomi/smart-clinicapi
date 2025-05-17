@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Shetabit\Multipay\Invoice;
 use Shetabit\Payment\Facade\Payment;
 use Illuminate\Support\Str;
+use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 
 class WalletController extends Controller
 {
@@ -116,6 +117,37 @@ class WalletController extends Controller
                 ]);
             }
         )->pay()->toJson();
+    }
+
+
+    public function chargeCallback(Request $request, WalletTransaction $transaction)
+    {
+
+        if($transaction->status == 'completed'){
+            return back();
+        }
+        // It is a good practice to add invoice amount as well.
+        try {
+            $receipt = Payment::amount($transaction->amount)->transactionId($transaction->transaction_id)->verify();
+            $wallet = $transaction->wallet;
+            // You can show payment referenceId to the user.
+            $referenceId = $receipt->getReferenceId();
+            $wallet->increment('balance', $transaction->amount);
+            $transaction->update([
+                'status' => 'completed',
+                'reference_id' => $referenceId,
+            ]);
+            return redirect(env('FRONTEND_URL') . '/dashboard/wallet/callback?transaction_id=' . $transaction->transaction_id . '&status=success');
+
+        } catch (InvalidPaymentException $exception) {
+            /**
+                when payment is not verified, it will throw an exception.
+                We can catch the exception to handle invalid payments.
+                getMessage method, returns a suitable message that can be used in user interface.
+            **/
+
+            return redirect(env('FRONTEND_URL') . '/dashboard/wallet/callback?transaction_id=' . $transaction->transaction_id . '&status=failed&message='.$exception->getMessage());
+        }
     }
 
     public function deposit(Request $request)

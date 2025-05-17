@@ -10,32 +10,15 @@ class WalletTransaction extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'amount',
-        'transaction_id',
-        'order_id',
-        'state',
-        'description',
-        'payment_data',
-    ];
+    protected $guarded=[];
 
-    protected $casts = [
-        'amount' => 'integer',
-        'state' => 'integer',
-        'payment_data' => 'array',
-    ];
 
-    // States
-    const STATE_PENDING = 0;
-    const STATE_SUCCESSFUL = 1;
-    const STATE_FAILED = 2;
 
     /**
      * Get the user that owns the transaction.
      */
-    public function user(): BelongsTo
+    public function wallet(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Wallet::class);
     }
 }

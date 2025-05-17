@@ -71,8 +71,7 @@ class GoogleController extends Controller
                 // Encode the token for URL safety
                 $encodedToken = urlencode($token);
 
-                // Log successful token creation
-                \Log::info('Token created successfully');
+                
 
                 return redirect(env('FRONTEND_URL') . '/auth/callback?token=' . $encodedToken);
 

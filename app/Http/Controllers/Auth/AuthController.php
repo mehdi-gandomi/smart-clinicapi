@@ -62,16 +62,33 @@ class AuthController extends Controller
         Otp::updateOrCreate(
             ['mobile' => $request->mobile],
             [
-                'otp' => Hash::make($otp),
+                // 'otp' => Hash::make($otp),
+                'otp'=>$otp,
                 'expires_at' => Carbon::now()->addMinutes(5)
             ]
         );
 
         // In production, send OTP via SMS service
+
+        $response = \Http::withOptions([
+            'verify' => false
+        ])->withHeaders([
+        'apikey' => env('FARAZSMS_API_KEY'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api2.ippanel.com/api/v1/sms/pattern/normal/send', [
+            'code' => env('FARAZSMS_PATTERN_CODE'),
+            'sender' => env('FARAZSMS_NUMBER'),
+            'recipient' => $request->mobile,
+            'variable' => [
+                'verification-code' => $otp
+            ]
+        ]);
+        
+        
+
         // For development, return OTP in response
         return response()->json([
-            'message' => 'OTP sent successfully',
-            'otp' => $otp // Remove this in production
+            'message' => 'OTP sent successfully'
         ]);
     }
 
@@ -83,7 +100,7 @@ class AuthController extends Controller
         ]);
 
         $otpRecord = Otp::where('mobile', $request->mobile)
-            ->where('verified', false)
+            ->where('otp', $request->otp)
             ->where('expires_at', '>', Carbon::now())
             ->first();
 
@@ -93,14 +110,19 @@ class AuthController extends Controller
             ], 400);
         }
 
-        if (!Hash::check($request->otp, $otpRecord->otp)) {
-            return response()->json([
-                'message' => 'Invalid OTP'
-            ], 400);
-        }
+        // if (!Hash::check($request->otp, $otpRecord->otp)) {
+        //     return response()->json([
+        //         'message' => 'Invalid OTP'
+        //     ], 400);
+        // }
+        // if ($request->otp != $otpRecord->otp) {
+        //     return response()->json([
+        //         'message' => 'Invalid OTP'
+        //     ], 400);
+        // }
 
         // Mark OTP as verified
-        $otpRecord->update(['verified' => true]);
+        $otpRecord->delete();
 
         // Check if user exists
         $user = User::where('mobile', $request->mobile)->first();
@@ -112,11 +134,19 @@ class AuthController extends Controller
                 'token' => $token,
                 'user' => $user
             ]);
+        }else{
+            $user=User::create([
+                'mobile'=>$request->mobile
+            ]);
+            $token = $user->createToken('auth-token')->plainTextToken;
+            return response()->json([
+                'isNewUser' => true,
+                'token' => $token,
+                'user' => $user
+            ]);
         }
 
-        return response()->json([
-            'isNewUser' => true
-        ]);
+    
     }
 
     public function register(Request $request)
