@@ -13,173 +13,142 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use Filament\Notifications\Notification;
 
-class BloodPressureChart extends Widget implements HasForms
+class BloodPressureChart extends Widget 
+// implements HasForms
 {
 
-    use InteractsWithForms;
+    // use InteractsWithForms;
     protected static string $view = 'filament.resources.user.widgets.blood-pressure-chart';
     public $record;
 
-    public $selected_week = null;
-    public $weeks = [];
-    public $from_date;
-    public $to_date;
+    
 
     protected int | string | array $columnSpan = 'full';
 
     public function mount($record): void
     {
         $this->record = $record;
-        $this->weeks = $this->getWeeksWithData();
-
-        // Set default dates to current week
-        $now = Carbon::now();
-        $startOfWeek = $now->copy()->startOfWeek(Carbon::SATURDAY);
-        $endOfWeek = $startOfWeek->copy()->addDays(6);
-
-        $this->from_date = $startOfWeek->toDateString();
-        $this->to_date = $endOfWeek->toDateString();
-
-        // Default to the most recent week if available
-        if (!$this->selected_week && count($this->weeks)) {
-            $this->selected_week = $this->weeks[0]['key'];
-            $this->from_date = $this->weeks[0]['start'];
-            $this->to_date = $this->weeks[0]['end'];
-        }
+ 
     }
 
-    protected function getFormSchema(): array
-    {
-        return [
-            Select::make('selected_week')
-                ->label('انتخاب هفته')
-                ->options(collect($this->weeks)->pluck('label', 'key')->toArray())
-                ->reactive()
-                ->afterStateUpdated(function ($state, callable $set) {
-                    if ($state) {
-                        $week = collect($this->weeks)->firstWhere('key', $state);
-                        if ($week) {
-                            $set('from_date', $week['start']);
-                            $set('to_date', $week['end']);
-                        }
-                    }
-                })
-                ->required(),
+    // protected function getFormSchema(): array
+    // {
+    //     return [
+    //         Select::make('selected_week')
+    //             ->label('انتخاب هفته')
+    //             ->options(collect($this->weeks)->pluck('label', 'key')->toArray())
+    //             ->reactive()
+    //             ->afterStateUpdated(function ($state, callable $set) {
+    //                 if ($state) {
+    //                     $week = collect($this->weeks)->firstWhere('key', $state);
+    //                     if ($week) {
+    //                         $set('from_date', $week['start']);
+    //                         $set('to_date', $week['end']);
+    //                     }
+    //                 }
+    //             })
+    //             ->required(),
 
-            DatePicker::make('from_date')
-                ->label('از تاریخ')
-                ->jalali()
-                ->reactive()
-                ->displayFormat("Y/m/d")
-                ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                    $from = Carbon::parse($state);
-                    $to = $get('to_date') ? Carbon::parse($get('to_date')) : null;
+    //         DatePicker::make('from_date')
+    //             ->label('از تاریخ')
+    //             ->jalali()
+    //             ->reactive()
+    //             ->displayFormat("Y/m/d")
+    //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
+    //                 $from = Carbon::parse($state);
+    //                 $to = $get('to_date') ? Carbon::parse($get('to_date')) : null;
 
-                    if ($to && $from->diffInDays($to) !== 6) {
-                        Notification::make()
-                            ->title('بازه زمانی باید دقیقاً ۷ روز باشد')
-                            ->danger()
-                            ->send();
-                    }
-                })
-                ->required(),
+    //                 if ($to && $from->diffInDays($to) !== 6) {
+    //                     Notification::make()
+    //                         ->title('بازه زمانی باید دقیقاً ۷ روز باشد')
+    //                         ->danger()
+    //                         ->send();
+    //                 }
+    //             })
+    //             ->required(),
 
-            DatePicker::make('to_date')
-                ->label('تا تاریخ')
-                ->jalali()
-                ->reactive()
-                ->displayFormat("Y/m/d")
-                ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                    $to = Carbon::parse($state);
-                    $from = $get('from_date') ? Carbon::parse($get('from_date')) : null;
+    //         DatePicker::make('to_date')
+    //             ->label('تا تاریخ')
+    //             ->jalali()
+    //             ->reactive()
+    //             ->displayFormat("Y/m/d")
+    //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
+    //                 $to = Carbon::parse($state);
+    //                 $from = $get('from_date') ? Carbon::parse($get('from_date')) : null;
 
-                    if ($from && $from->diffInDays($to) !== 6) {
-                        Notification::make()
-                            ->title('بازه زمانی باید دقیقاً ۷ روز باشد')
-                            ->danger()
-                            ->send();
-                    }
-                })
-                ->required(),
-        ];
-    }
+    //                 if ($from && $from->diffInDays($to) !== 6) {
+    //                     Notification::make()
+    //                         ->title('بازه زمانی باید دقیقاً ۷ روز باشد')
+    //                         ->danger()
+    //                         ->send();
+    //                 }
+    //             })
+    //             ->required(),
+    //     ];
+    // }
 
-    /**
-     * Get all week ranges (Saturday to Friday) with blood pressure data for the user.
-     * Returns array: [['key' => '2024-05-04_2024-05-10', 'label' => '1403/02/15 - 1403/02/21'], ...]
-     */
-    public function getWeeksWithData(): array
-    {
-        $dates = BloodPressure::where('user_id', $this->record->id)
-            ->orderBy('date')
-            ->pluck('date');
-        if ($dates->isEmpty()) return [];
-
-        $weeks = [];
-        foreach ($dates as $date) {
-            $carbon = Carbon::parse($date);
-            $startOfWeek = $carbon->copy()->startOfWeek(Carbon::SATURDAY)->startOfDay();
-            $endOfWeek = $startOfWeek->copy()->addDays(6)->endOfDay();
-            $key = $startOfWeek->toDateString() . '_' . $endOfWeek->toDateString();
-            $label = verta($startOfWeek)->format('Y/m/d') . ' - ' . verta($endOfWeek)->format('Y/m/d');
-            $weeks[$key] = [
-                'key' => $key,
-                'label' => $label,
-                'start' => $startOfWeek->toDateString(),
-                'end' => $endOfWeek->toDateString(),
-            ];
-        }
-        // Remove duplicates and sort descending (most recent first)
-        $weeks = array_values(array_reverse(array_unique($weeks, SORT_REGULAR)));
-        return $weeks;
-    }
+  
 
     protected function getViewData(): array
     {
-        $start = Carbon::parse($this->from_date)->startOfDay();
-        $end = Carbon::parse($this->to_date)->endOfDay();
+        
 
-        $data = BloodPressure::select(
-                DB::raw("DATE(date) as day"),
-                DB::raw("date"),
-                DB::raw("AVG(systolic) as avg_systolic"),
-                DB::raw("AVG(diastolic) as avg_diastolic"),
-                DB::raw("AVG(heart_rate) as avg_heart_rate"),
-                DB::raw("MAX(systolic) as max_systolic"),
-                DB::raw("MAX(diastolic) as max_diastolic")
-            )
-            ->where('user_id', $this->record->id)
-            ->whereBetween('date', [$start, $end])
-            ->groupBy('day')
-            ->groupBy('date')
-            ->orderBy('day')
+        $bloodPressures = BloodPressure::where('user_id', $this->record->id)
+            ->orderBy('date')
             ->get();
-
-        $labels = [];
-        $systolic = [];
-        $diastolic = [];
-        $maxSystolic = [];
-        $maxDiastolic = [];
-
-        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-            $day = $date->format('Y-m-d');
-            $labels[] = $date->locale('fa')->isoFormat('dddd');
-            $dayData = $data->firstWhere('day', $day);
-            $systolic[] = $dayData ? round($dayData->avg_systolic, 1) : null;
-            $diastolic[] = $dayData ? round($dayData->avg_diastolic, 1) : null;
-            $maxSystolic[] = $dayData ? round($dayData->max_systolic, 1) : null;
-            $maxDiastolic[] = $dayData ? round($dayData->max_diastolic, 1) : null;
+        $all_sys_data=[];
+        $all_dia_data=[];
+        $all_hr_data=[];
+        foreach($bloodPressures as $bloodPressure){
+            $all_sys_data[]=$bloodPressure->systolic;
+            $all_dia_data[]=$bloodPressure->diastolic;
+            $all_hr_data[]=$bloodPressure->heart_rate;
         }
+        $total=max(count($all_sys_data),count($all_hr_data),count($all_dia_data));
 
-        return [
-            'bloodPressures' => $data,
-            'labels' => $labels,
-            'systolic' => $systolic,
-            'diastolic' => $diastolic,
-            'maxSystolic' => $maxSystolic,
-            'maxDiastolic' => $maxDiastolic,
-            'weeks' => $this->weeks,
-            'selected_week' => $this->selected_week,
-        ];
+        for($i=0;$i<$total;$i++){
+            if($all_dia_data[$i] == null && $all_sys_data[$i] == null){
+                $map=null;
+                $pp=null;
+                $co=null;
+                $ci=null;
+            }
+            else{
+                $map=$all_dia_data[$i] + 0.333 * ($all_sys_data[$i] - $all_dia_data[$i]);
+                $pp=$all_sys_data[$i] - $all_dia_data[$i];
+                $co=$pp * $all_hr_data[$i] / 1000;
+                $ci=$co / (sqrt(($this->record->weight ?? 60) * ($this->record->weight ?? 60) / 3600));
+                $maps[]=$map;
+        
+                $pps[]=$pp;
+        
+                $cos[]=$co;
+        
+                $cis[]=$ci;
+            }
+        
+        }
+        
+        $dia_std=$this->std_deviation($all_dia_data);
+        $sys_std=$this->std_deviation($all_sys_data);
+        $hr_std=$this->std_deviation($all_hr_data);
+        
+        $map_std=$this->std_deviation($maps);
+        $pp_std=$this->std_deviation($pps);
+        $ci_std=$this->std_deviation($cis);
+        $co_std=$this->std_deviation($cos);
+        
+        
+        return compact('abpm','maps','cos','cis','pps','summary','dia_std','sys_std','hr_std','map_std','pp_std','ci_std','co_std');
     }
+
+    public function std_deviation($data)
+   {
+        $n = count($data);
+        $mean = array_sum($data) / $n;
+        $distance_sum = 0;
+        foreach ($data as $i) {  $distance_sum += ($i - $mean) ** 2;}
+        $variance = $distance_sum / $n;
+        return number_format(sqrt($variance),1);
+   }
 }
