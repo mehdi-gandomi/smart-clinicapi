@@ -20,6 +20,7 @@ class BloodPressure extends Model
         'systolic',
         'diastolic',
         'heart_rate',
+        'examined',
         'notes',
     ];
 

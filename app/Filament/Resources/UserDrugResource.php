@@ -7,6 +7,7 @@ use App\Filament\Resources\UserDrugResource\RelationManagers;
 use App\Models\UserDrug;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -28,7 +29,15 @@ class UserDrugResource extends Resource
     protected static ?string $navigationGroup = 'Docs management';
     protected static ?string $label = 'Drug';
     protected static ?string $pluralLabel = 'Drugs';
+    public static function canCreate(): bool
+    {
+        return false;
+    }
 
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
     public static function form(Form $form): Form
     {
         return $form

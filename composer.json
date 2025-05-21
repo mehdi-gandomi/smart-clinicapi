@@ -14,6 +14,7 @@
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.11",
+        "mokhosh/filament-jalali": "^4.10",
         "openai-php/client": "^0.10.3",
         "shetabit/payment": "^6.2",
         "spatie/laravel-settings": "^3.4",

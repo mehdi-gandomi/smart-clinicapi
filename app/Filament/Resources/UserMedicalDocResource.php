@@ -7,6 +7,7 @@ use App\Models\UserMedicalDoc;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Tables;
 use Filament\Forms\Components;
 use Illuminate\Support\Facades\Storage;
@@ -23,7 +24,15 @@ class UserMedicalDocResource extends Resource
     protected static ?string $navigationGroup = 'Docs management';
     protected static ?string $label = 'Doc';
     protected static ?string $pluralLabel = 'Medical docs';
+    public static function canCreate(): bool
+    {
+        return false;
+    }
 
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
     public static function form(Form $form): Form
     {
         return $form

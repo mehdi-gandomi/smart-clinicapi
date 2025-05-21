@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('diastolic');
             $table->integer('heart_rate');
             $table->text('notes')->nullable();
+            $table->tinyInteger('examined')->default(0);
             $table->timestamps();
         });
     }

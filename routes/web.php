@@ -6,7 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Jobs\ProcessGptAssessment;
 use App\Models\User;
 use App\Models\UserAssessment;
-
+use Illuminate\Support\Facades\Http;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -19,6 +19,9 @@ use App\Models\UserAssessment;
 */
 
 Route::get('/', function () {
+    
+
+    
 
     return view('welcome');
 })->name('home');
