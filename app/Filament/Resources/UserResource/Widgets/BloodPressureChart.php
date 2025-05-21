@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use Filament\Notifications\Notification;
 
-class BloodPressureChart extends Widget 
+class BloodPressureChart extends Widget
 // implements HasForms
 {
 
@@ -21,14 +21,14 @@ class BloodPressureChart extends Widget
     protected static string $view = 'filament.resources.user.widgets.blood-pressure-chart';
     public $record;
 
-    
+
 
     protected int | string | array $columnSpan = 'full';
 
     public function mount($record): void
     {
         $this->record = $record;
- 
+
     }
 
     // protected function getFormSchema(): array
@@ -87,22 +87,29 @@ class BloodPressureChart extends Widget
     //     ];
     // }
 
-  
+
 
     protected function getViewData(): array
     {
-        
+
 
         $bloodPressures = BloodPressure::where('user_id', $this->record->id)
+            ->where("examined",0)
             ->orderBy('date')
+
             ->get();
+        $sys_avg=$bloodPressures->avg("systolic");
+        $dia_avg=$bloodPressures->avg("diastolic");
+        $hr_avg=$bloodPressures->avg("heart_rate");
         $all_sys_data=[];
         $all_dia_data=[];
         $all_hr_data=[];
+        $dates=[];
         foreach($bloodPressures as $bloodPressure){
             $all_sys_data[]=$bloodPressure->systolic;
             $all_dia_data[]=$bloodPressure->diastolic;
             $all_hr_data[]=$bloodPressure->heart_rate;
+            $dates[]=\Carbon\Carbon::parse($bloodPressure->date)->toJalali()->formatJalaliDatetime();
         }
         $total=max(count($all_sys_data),count($all_hr_data),count($all_dia_data));
 
@@ -119,27 +126,26 @@ class BloodPressureChart extends Widget
                 $co=$pp * $all_hr_data[$i] / 1000;
                 $ci=$co / (sqrt(($this->record->weight ?? 60) * ($this->record->weight ?? 60) / 3600));
                 $maps[]=$map;
-        
+
                 $pps[]=$pp;
-        
+
                 $cos[]=$co;
-        
+
                 $cis[]=$ci;
             }
-        
+
         }
-        
+
         $dia_std=$this->std_deviation($all_dia_data);
         $sys_std=$this->std_deviation($all_sys_data);
         $hr_std=$this->std_deviation($all_hr_data);
-        
+
         $map_std=$this->std_deviation($maps);
         $pp_std=$this->std_deviation($pps);
         $ci_std=$this->std_deviation($cis);
         $co_std=$this->std_deviation($cos);
-        
-        
-        return compact('abpm','maps','cos','cis','pps','summary','dia_std','sys_std','hr_std','map_std','pp_std','ci_std','co_std');
+
+        return compact('maps','dates','cos','cis','pps','sys_avg','hr_avg','dia_avg','dia_std','sys_std','hr_std','map_std','pp_std','ci_std','co_std','all_sys_data','all_dia_data','all_hr_data');
     }
 
     public function std_deviation($data)

@@ -9,6 +9,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentAsset;
@@ -28,6 +29,9 @@ class AdminPanelProvider extends PanelProvider
         FilamentAsset::register([
             // Register Chart.js from CDN
             Js::make('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js'),
+
+
+            Js::make('chartjs-annotation', 'https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.1.0/chartjs-plugin-annotation.min.js'),
 
             // You can add more external libraries as needed
             // Js::make('some-plugin', 'https://cdn.jsdelivr.net/npm/some-plugin@version'),

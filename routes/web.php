@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\Http;
 */
 
 Route::get('/', function () {
-    
 
-    
+
+
 
     return view('welcome');
 })->name('home');
