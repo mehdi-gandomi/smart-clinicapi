@@ -191,6 +191,7 @@ thead, tbody, tfoot, tr, td, th {
 <script>
 
 </script>
+    @if(count($all_dia_data) > 0)
     <div class="container">
         <div class="print-area">
             <h1 class="text-center">ABPM Result</h1>
@@ -226,13 +227,13 @@ thead, tbody, tfoot, tr, td, th {
             </div>
             <div class="abpm-table">
                 <table class="table table-bordered">
-                    <thead>
+                <thead>
                         <tr class="table-header">
                             <th colspan="5"> ABPM Statistics</th>
 
-                        </tr>
-                    </thead>
-                    <tbody>
+                    </tr>
+                </thead>
+                <tbody>
                         <tr>
                             <td class="border-end-0">
 
@@ -369,9 +370,9 @@ thead, tbody, tfoot, tr, td, th {
                             </td>
                         </tr>
 
-                    </tbody>
+                </tbody>
 
-                </table>
+            </table>
                 <table class="chart-table" >
                     <tbody>
                         <tr class="border-0">
@@ -501,13 +502,11 @@ thead, tbody, tfoot, tr, td, th {
                     <thead>
                         <tr class="table-header">
                             <th colspan="7">Result</th>
-
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td class="border-end-0">
-
                             </td>
                             <td class="border-end-0 border-start-0" style="font-weight:bold">
                                 Office
@@ -515,24 +514,19 @@ thead, tbody, tfoot, tr, td, th {
                             <td class="border-end-0 border-start-0" style="font-weight:bold">
                                 Total
                             </td>
-
                         </tr>
-
                         <tr>
-
                            <td class="border-end-0">
                            SYS/DIA (mmgHg)
                            </td>
-                               <td class="border-end-0 border-start-0">
+                           <td class="border-end-0 border-start-0">
                            {{$all_sys_data[0]}} / {{$all_dia_data[0]}}
                            </td>
                            <td class="border-end-0 border-start-0">
                                {{$sys_avg}} / {{$dia_avg}}
                            </td>
-
                        </tr>
                         <tr>
-
                             <td class="border-end-0">
                                 HR (bpm)
                             </td>
@@ -542,16 +536,212 @@ thead, tbody, tfoot, tr, td, th {
                             <td class="border-end-0 border-start-0">
                             {{$hr_avg}}
                             </td>
-
                         </tr>
-
                     </tbody>
-
                 </table>
+            </div>
+
+            <!-- Voice Recording Section -->
+            <div class="mt-4">
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <h3 class="text-lg font-semibold mb-4">ثبت توضیحات صوتی</h3>
+                    <div
+                        x-data="{
+                            isRecording: false,
+                            mediaRecorder: null,
+                            audioStream: null,
+                            audioUrl: null,
+                            startTime: null,
+                            timerInterval: null,
+                            duration: 0,
+                            audioChunks: [],
+                            mimeType: '',
+
+                            async startRecording() {
+                                try {
+                                    this.audioUrl = null; // Reset audioUrl when starting new recording
+                                    this.audioStream = await navigator.mediaDevices.getUserMedia({
+                                        audio: {
+                                            echoCancellation: true,
+                                            noiseSuppression: true,
+                                            channelCount: 1
+                                        }
+                                    });
+
+                                    const mimeTypes = [
+                                        'audio/webm;codecs=opus',
+                                        'audio/webm',
+                                        'audio/ogg;codecs=opus',
+                                        'audio/ogg',
+                                        'audio/mp4;codecs=mp4a',
+                                        'audio/mp4',
+                                        'audio/aac',
+                                        'audio/wav',
+                                        ''
+                                    ];
+
+                                    this.mimeType = '';
+                                    for (let type of mimeTypes) {
+                                        if (MediaRecorder.isTypeSupported(type)) {
+                                            this.mimeType = type;
+                                            console.log(`Using MIME type: ${type}`);
+                                            break;
+                                        }
+                                    }
+
+                                    const options = {
+                                        mimeType: this.mimeType,
+                                        audioBitsPerSecond: 96000
+                                    };
+
+                                    this.mediaRecorder = new MediaRecorder(this.audioStream, options);
+
+                                    this.audioChunks = [];
+                                    this.startTime = Date.now();
+                                    this.duration = 0;
+                                    this.updateTimer();
+                                    this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+                                    this.isRecording = true;
+
+                                    this.mediaRecorder.ondataavailable = (event) => {
+                                        this.audioChunks.push(event.data);
+                                    };
+
+                                    this.mediaRecorder.onstop = async () => {
+                                        try {
+                                            const audioBlob = new Blob(this.audioChunks, { type: this.mimeType });
+                                            this.audioUrl = URL.createObjectURL(audioBlob);
+                                            console.log('Audio URL set:', this.audioUrl); // Debug log
+                                        } catch (error) {
+                                            console.error('Error processing audio:', error);
+                                            alert('خطا در پردازش صدا.');
+                                        }
+
+                                        clearInterval(this.timerInterval);
+                                    };
+
+                                    this.mediaRecorder.start(1000);
+                                } catch (error) {
+                                    console.error('Error accessing microphone:', error);
+                                    alert('خطا در دسترسی به میکروفون. لطفا دسترسی میکروفون را فعال کنید.');
+                                }
+                            },
+
+                            stopRecording() {
+                                if (this.mediaRecorder && this.isRecording) {
+                                    this.mediaRecorder.stop();
+                                    this.audioStream.getTracks().forEach(track => track.stop());
+                                    this.isRecording = false;
+                                    clearInterval(this.timerInterval);
+                                }
+                            },
+
+                            updateTimer() {
+                                const now = Date.now();
+                                this.duration = Math.floor((now - this.startTime) / 1000);
+                                const minutes = Math.floor(this.duration / 60);
+                                const seconds = this.duration % 60;
+                                this.$refs.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                            },
+
+                            async saveRecording() {
+                                try {
+                                  const preferredMimeType = MediaRecorder.isTypeSupported('audio/mp3') ? 'audio/mp3' : 'audio/webm';
+                                    const audioBlob = new Blob(this.audioChunks, { type: preferredMimeType });
+
+                                    const extension = preferredMimeType.split('/')[1]; // استخراج mp3 یا webm
+                                    const formData = new FormData();
+                                    formData.append('voice', audioBlob, `voice.${extension}`);
+                                    formData.append('user_id','{{$this->record->id}}');
+                                    formData.append('blood_pressure_ids','{{$ids}}');
+                                    const response = await fetch('/blood-pressure/upload-voice', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                                        },
+                                        body: formData
+                                    });
+
+                                    const result = await response.json();
+          if (result.success) {
+            alert('توضیحات صوتی با موفقیت ذخیره شد');
+            this.resetRecording();
+        } else {
+            alert('خطا در ذخیره توضیحات صوتی');
+        }                            
+                                    
+                                } catch (error) {
+                                    console.error('Error saving recording:', error);
+                                    alert('خطا در ذخیره ضبط صدا');
+                                }
+                            },
+
+                            resetRecording() {
+                                this.audioUrl = null;
+                                this.audioChunks = [];
+                                this.duration = 0;
+                                this.$refs.timer.textContent = '00:00';
+
+                                if (this.audioStream) {
+                                    this.audioStream.getTracks().forEach(track => track.stop());
+                                }
+                            }
+                        }"
+                        class="space-y-4"
+                    >
+                        <div class="flex justify-between space-x-4">
+                            <button
+                                type="button"
+                                x-show="!isRecording && !audioUrl"
+                                @click="startRecording"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                                <svg class="w-5 h-5 ml-2 rtl:ml-reverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                                شروع ضبط
+                            </button>
+                            <button
+                                type="button"
+                                x-show="isRecording"
+                                @click="stopRecording"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                                <svg class="w-5 h-5 ml-2 rtl:ml-reverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                </svg>
+                                توقف ضبط
+                            </button>
+                            <span x-ref="timer" class="text-lg font-mono bg-gray-100 px-3 py-1 rounded">00:00</span>
+                        </div>
+
+                        <div x-show="audioUrl" class="space-y-4 mt-4">
+                            <audio x-ref="audioPlayer" controls class="w-full" x-bind:src="audioUrl"></audio>
+                            <div class="flex justify-end mt-2">
+                                <button
+                                    type="button"
+                                    @click="saveRecording()"
+                                    class="inline-flex items-center px-6 py-3 font-bold rounded-lg bg-orange-600 hover:bg-orange-700 focus:outline-none transition-colors"
+                                >
+                                    <svg class="w-5 h-5 ml-2 rtl:ml-reverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                    ارسال پاسخ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         </div>
 
     </div>
+    @else
+                                    <div class="container text-center">
+                                        <h4>اطلاعاتی یافت نشد</h4>
+                                    </div>
+    @endif
 
 </x-filament::widget>

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\BloodPressureVoiceController;
 use App\Jobs\ProcessGptAssessment;
 use App\Models\User;
 use App\Models\UserAssessment;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Http;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::post('/blood-pressure/upload-voice', [BloodPressureVoiceController::class, 'upload']);
 Route::get('/', function () {
 
 

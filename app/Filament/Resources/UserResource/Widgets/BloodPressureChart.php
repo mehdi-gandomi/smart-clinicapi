@@ -12,6 +12,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Storage;
+use App\Models\DoctorBloodPressureVoice;
+use Illuminate\Support\Facades\Log;
 
 class BloodPressureChart extends Widget
 // implements HasForms
@@ -98,6 +101,7 @@ class BloodPressureChart extends Widget
             ->orderBy('date')
 
             ->get();
+        $ids=implode(",",$bloodPressures->pluck("id")->toArray());
         $sys_avg=$bloodPressures->avg("systolic");
         $dia_avg=$bloodPressures->avg("diastolic");
         $hr_avg=$bloodPressures->avg("heart_rate");
@@ -105,6 +109,10 @@ class BloodPressureChart extends Widget
         $all_dia_data=[];
         $all_hr_data=[];
         $dates=[];
+        $maps=[];
+        $pps=[];
+        $cis=[];
+        $cos=[];
         foreach($bloodPressures as $bloodPressure){
             $all_sys_data[]=$bloodPressure->systolic;
             $all_dia_data[]=$bloodPressure->diastolic;
@@ -145,11 +153,12 @@ class BloodPressureChart extends Widget
         $ci_std=$this->std_deviation($cis);
         $co_std=$this->std_deviation($cos);
 
-        return compact('maps','dates','cos','cis','pps','sys_avg','hr_avg','dia_avg','dia_std','sys_std','hr_std','map_std','pp_std','ci_std','co_std','all_sys_data','all_dia_data','all_hr_data');
+        return compact('maps','ids','dates','cos','cis','pps','sys_avg','hr_avg','dia_avg','dia_std','sys_std','hr_std','map_std','pp_std','ci_std','co_std','all_sys_data','all_dia_data','all_hr_data');
     }
 
     public function std_deviation($data)
    {
+        if(count($data) < 1) return 0;
         $n = count($data);
         $mean = array_sum($data) / $n;
         $distance_sum = 0;
@@ -157,4 +166,6 @@ class BloodPressureChart extends Widget
         $variance = $distance_sum / $n;
         return number_format(sqrt($variance),1);
    }
+
+ 
 }
