@@ -14,11 +14,11 @@ class UserAssessmentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'assessments';
 
-    protected static ?string $title = 'ارزیابی‌ها';
+    protected static ?string $title = 'Assessments';
 
-    protected static ?string $modelLabel = 'ارزیابی';
+    protected static ?string $modelLabel = 'Assessment';
 
-    protected static ?string $pluralModelLabel = 'ارزیابی‌ها';
+    protected static ?string $pluralModelLabel = 'Assessments';
 
     public function form(Form $form): Form
     {
@@ -27,7 +27,7 @@ class UserAssessmentsRelationManager extends RelationManager
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255)
-                    ->label('عنوان'),
+                    ->label('Title'),
             ]);
     }
 
@@ -44,33 +44,33 @@ class UserAssessmentsRelationManager extends RelationManager
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'in_progress' => 'در حال انجام',
-                        'completed' => 'تکمیل شده',
+                        'in_progress' => 'In Progress',
+                        'completed' => 'Completed',
                         default => $state,
                     })
                     ->sortable()
-                    ->label('وضعیت'),
+                    ->label('Status'),
                 Tables\Columns\TextColumn::make('answers_count')
                     ->counts('answers')
-                    ->label('تعداد پاسخ‌ها'),
+                    ->label('Number of Answers'),
                 Tables\Columns\TextColumn::make('medical_documents_count')
                     ->counts('medicalDocuments')
-                    ->label('تعداد مدارک پزشکی'),
+                    ->label('Number of Medical Documents'),
                 Tables\Columns\TextColumn::make('drug_documents_count')
                     ->counts('drugsDocuments')
-                    ->label('تعداد داروها'),
+                    ->label('Number of Drugs'),
                 Tables\Columns\TextColumn::make('completed_at')
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable()
-                    ->label('تاریخ تکمیل'),
+                    ->label('Completion Date'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable()
-                    ->label('تاریخ ایجاد'),
+                    ->label('Created At'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable()
-                    ->label('تاریخ بروزرسانی'),
+                    ->label('Updated At'),
             ])
             ->filters([
                 //

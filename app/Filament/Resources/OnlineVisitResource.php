@@ -22,13 +22,13 @@ class OnlineVisitResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';
 
-    protected static ?string $navigationGroup = 'مدیریت بیماران';
+    protected static ?string $navigationGroup = 'Patient Management';
 
-    protected static ?string $navigationLabel = 'ویزیت های آنلاین';
+    protected static ?string $navigationLabel = 'Online Visits';
 
-    protected static ?string $modelLabel = 'ویزیت آنلاین';
+    protected static ?string $modelLabel = 'Online Visit';
 
-    protected static ?string $pluralModelLabel = 'ویزیت های آنلاین';
+    protected static ?string $pluralModelLabel = 'Online Visits';
 
     public static function canCreate(): bool
     {
@@ -43,48 +43,48 @@ class OnlineVisitResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('اطلاعات ویزیت')
+                Section::make('Visit Information')
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->relationship('user', 'name')
                             ->required()
-                            ->label('نام بیمار'),
+                            ->label('Patient Name'),
                         Forms\Components\Select::make('visit_type')
                             ->options([
-                                'medical_questions' => 'سوالات پزشکی',
-                                'document_review' => 'بررسی مدارک',
-                                'prescription_renewal' => 'تمدید نسخه',
+                                'medical_questions' => 'Medical Questions',
+                                'document_review' => 'Document Review',
+                                'prescription_renewal' => 'Prescription Renewal',
                             ])
                             ->required()
-                            ->label('نوع ویزیت'),
+                            ->label('Visit Type'),
                         Forms\Components\Textarea::make('description')
-                            ->label('توضیحات'),
+                            ->label('Description'),
                         Forms\Components\Select::make('status')
                             ->options([
-                                'pending' => 'در انتظار بررسی',
-                                'in_progress' => 'در حال بررسی',
-                                'answered' => 'پاسخ داده شده',
-                                'cancelled' => 'لغو شده',
+                                'pending' => 'Pending Review',
+                                'in_progress' => 'In Progress',
+                                'answered' => 'Answered',
+                                'cancelled' => 'Cancelled',
                             ])
                             ->required()
-                            ->label('وضعیت'),
+                            ->label('Status'),
                         Forms\Components\Textarea::make('answer')
-                            ->label('پاسخ متنی')
+                            ->label('Text Response')
                             ->columnSpanFull(),
                         Forms\Components\FileUpload::make('voice_answer')
-                            ->label('پاسخ صوتی')
+                            ->label('Voice Response')
                             ->acceptedFileTypes(['audio/mpeg', 'audio/wav', 'audio/mp3'])
                             ->maxSize(10240)
                             ->directory('voice-answers')
                             ->columnSpanFull(),
                         Forms\Components\TextInput::make('voice_answer_duration')
-                            ->label('مدت زمان پاسخ صوتی')
-                            ->placeholder('مثال: 2:30')
+                            ->label('Voice Response Duration')
+                            ->placeholder('Example: 2:30')
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
 
-                Section::make('مدارک پزشکی')
+                Section::make('Medical Documents')
                     ->schema([
                         ViewField::make('medical_documents')
                             ->view('filament.resources.online-visit.medical-docs')
@@ -98,16 +98,16 @@ class OnlineVisitResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('نام بیمار')
+                    ->label('Patient Name')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('visit_type')
-                    ->label('نوع ویزیت')
+                    ->label('Visit Type')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'medical_questions' => 'سوالات پزشکی',
-                        'document_review' => 'بررسی مدارک',
-                        'prescription_renewal' => 'تمدید نسخه',
+                        'medical_questions' => 'Medical Questions',
+                        'document_review' => 'Document Review',
+                        'prescription_renewal' => 'Prescription Renewal',
                         default => $state,
                     })
                     ->colors([
@@ -116,13 +116,13 @@ class OnlineVisitResource extends Resource
                         'warning' => 'prescription_renewal',
                     ]),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('وضعیت')
+                    ->label('Status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pending' => 'در انتظار بررسی',
-                        'in_progress' => 'در حال بررسی',
-                        'answered' => 'پاسخ داده شده',
-                        'cancelled' => 'لغو شده',
+                        'pending' => 'Pending Review',
+                        'in_progress' => 'In Progress',
+                        'answered' => 'Answered',
+                        'cancelled' => 'Cancelled',
                         default => $state,
                     })
                     ->colors([
@@ -132,35 +132,35 @@ class OnlineVisitResource extends Resource
                         'danger' => 'cancelled',
                     ]),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('تاریخ ایجاد')
+                    ->label('Created At')
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('answer')
-                    ->label('پاسخ متنی')
+                    ->label('Text Response')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
                 Tables\Columns\IconColumn::make('voice_answer')
-                    ->label('پاسخ صوتی')
+                    ->label('Voice Response')
                     ->boolean()
                     ->trueIcon('heroicon-o-speaker-wave')
                     ->falseIcon('heroicon-o-speaker-x-mark'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
-                    ->label('وضعیت')
+                    ->label('Status')
                     ->options([
-                        'pending' => 'در انتظار بررسی',
-                        'in_progress' => 'در حال بررسی',
-                        'answered' => 'پاسخ داده شده',
-                        'cancelled' => 'لغو شده',
+                        'pending' => 'Pending Review',
+                        'in_progress' => 'In Progress',
+                        'answered' => 'Answered',
+                        'cancelled' => 'Cancelled',
                     ]),
                 Tables\Filters\SelectFilter::make('visit_type')
-                    ->label('نوع ویزیت')
+                    ->label('Visit Type')
                     ->options([
-                        'medical_questions' => 'سوالات پزشکی',
-                        'document_review' => 'بررسی مدارک',
-                        'prescription_renewal' => 'تمدید نسخه',
+                        'medical_questions' => 'Medical Questions',
+                        'document_review' => 'Document Review',
+                        'prescription_renewal' => 'Prescription Renewal',
                     ]),
             ])
             ->actions([

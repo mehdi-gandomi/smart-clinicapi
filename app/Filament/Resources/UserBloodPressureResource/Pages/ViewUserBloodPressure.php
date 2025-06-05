@@ -14,33 +14,33 @@ class ViewUserBloodPressure extends ViewRecord
 {
     protected static string $resource = UserBloodPressureResource::class;
     protected function getHeaderWidgets(): array
-{
-    return [
-        BloodPressureChart::class,
-    ];
+    {
+        return [
+            BloodPressureChart::class,
+        ];
 }
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Section::make('اطلاعات شخصی')
+                Section::make('Personal Information')
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextEntry::make('first_name')
-                                    ->label('نام')
+                                    ->label('First Name')
                                     ->size(TextEntry\TextEntrySize::Large),
                                 TextEntry::make('last_name')
-                                    ->label('نام خانوادگی')
+                                    ->label('Last Name')
                                     ->size(TextEntry\TextEntrySize::Large),
                                 TextEntry::make('email')
-                                    ->label('ایمیل')
+                                    ->label('Email')
                                     ->size(TextEntry\TextEntrySize::Large),
                                 TextEntry::make('mobile')
-                                    ->label('موبایل')
+                                    ->label('Mobile')
                                     ->size(TextEntry\TextEntrySize::Large),
                                 TextEntry::make('gender')
-                                    ->label('جنسیت')
+                                    ->label('Gender')
                                     ->badge()
                                     ->color(fn (string $state): string => match ($state) {
                                         'male' => 'success',
@@ -48,44 +48,44 @@ class ViewUserBloodPressure extends ViewRecord
                                         default => 'gray',
                                     })
                                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                                        '1' => 'مرد',
-                                        '2' => 'زن',
+                                        '1' => 'Male',
+                                        '2' => 'Female',
                                         default => $state,
                                     }),
                                 TextEntry::make('birth_date')
-                                    ->label('تاریخ تولد')
+                                    ->label('Birth Date')
                                     ->date('Y/m/d'),
                                 TextEntry::make('created_at')
-                                    ->label('تاریخ ثبت نام')
+                                    ->label('Registration Date')
                                     ->dateTime('Y/m/d H:i:s'),
                             ]),
                     ]),
 
-                // Section::make('اطلاعات فشار خون')
+                // Section::make('Blood Pressure Information')
                 //     ->schema([
                 //         Grid::make(2)
                 //             ->schema([
                 //                 TextEntry::make('blood_pressures_count')
-                //                     ->label('تعداد کل ثبت فشار خون')
+                //                     ->label('Total Blood Pressure Records')
                 //                     ->size(TextEntry\TextEntrySize::Large),
                 //                 TextEntry::make('blood_pressures_max_date')
-                //                     ->label('آخرین ثبت فشار خون')
+                //                     ->label('Last Blood Pressure Record')
                 //                     ->dateTime('Y/m/d H:i:s'),
                 //             ]),
                 //     ]),
 
-                Section::make('اطلاعات پزشکی')
+                Section::make('Medical Information')
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextEntry::make('height')
-                                    ->label('قد (سانتی متر)')
+                                    ->label('Height')
                                     ->suffix(' cm'),
                                 TextEntry::make('weight')
-                                    ->label('وزن (کیلوگرم)')
+                                    ->label('Weight')
                                     ->suffix(' kg'),
                                 TextEntry::make('bmi')
-                                    ->label('شاخص توده بدنی (BMI)')
+                                    ->label('Body Mass Index (BMI)')
                                     ->state(function ($record) {
                                         if ($record->height && $record->weight) {
                                             $heightInMeters = $record->height / 100;
@@ -95,22 +95,22 @@ class ViewUserBloodPressure extends ViewRecord
                                         return null;
                                     }),
                                 TextEntry::make('blood_type')
-                                    ->label('گروه خونی')
+                                    ->label('Blood Type')
                                     ->badge(),
                             ]),
                     ]),
 
-                Section::make('اطلاعات تماس')
+                Section::make('Contact Information')
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextEntry::make('address')
-                                    ->label('آدرس')
+                                    ->label('Address')
                                     ->columnSpanFull(),
                                 TextEntry::make('emergency_contact')
-                                    ->label('شماره تماس اضطراری'),
+                                    ->label('Emergency Contact Number'),
                                 TextEntry::make('emergency_contact_name')
-                                    ->label('نام تماس اضطراری'),
+                                    ->label('Emergency Contact Name'),
                             ]),
                     ]),
             ]);

@@ -10,8 +10,8 @@ use Filament\Pages\SettingsPage;
 class ManageFinancialSetting extends SettingsPage
 {
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationLabel = 'تنظیمات مالی';
-    protected static ?string $title = 'تنظیمات مالی';
+    protected static ?string $navigationLabel = 'Financial Settings';
+    protected static ?string $title = 'Financial Settings';
     protected static ?int $navigationSort = 3;
 
     protected static string $settings = FinancialSetting::class;
@@ -20,23 +20,23 @@ class ManageFinancialSetting extends SettingsPage
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('قیمت‌ها')
+                Forms\Components\Section::make('Prices')
                     ->schema([
                         Forms\Components\TextInput::make('blood_pressure_price')
-                            ->label('قیمت ثبت فشار خون')
+                            ->label('Blood Pressure Recording Price')
                             ->numeric()
-                            ->prefix('تومان')
+                            ->prefix('Toman')
                             ->required()
                             ->minValue(0)
-                            ->helperText('قیمت هر بار ثبت فشار خون'),
+                            ->helperText('Price for each blood pressure recording'),
 
                         Forms\Components\TextInput::make('online_visit_price')
-                            ->label('قیمت ویزیت آنلاین')
+                            ->label('Online Visit Price')
                             ->numeric()
-                            ->prefix('تومان')
+                            ->prefix('Toman')
                             ->required()
                             ->minValue(0)
-                            ->helperText('قیمت هر ویزیت آنلاین'),
+                            ->helperText('Price for each online visit'),
                     ])
                     ->columns(2),
             ]);

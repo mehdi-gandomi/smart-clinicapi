@@ -207,28 +207,28 @@ thead, tbody, tfoot, tr, td, th {
                             <div class="border rounded-lg p-4">
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p class="text-sm text-gray-600">تاریخ:</p>
+                                        <p class="text-sm text-gray-600">Date:</p>
                                         <p class="font-medium">${new Date(bp.date).toLocaleDateString('fa-IR')}</p>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-600">ساعت:</p>
+                                        <p class="text-sm text-gray-600">Time:</p>
                                         <p class="font-medium">${new Date(bp.date).toLocaleTimeString('fa-IR')}</p>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-600">فشار سیستول:</p>
+                                        <p class="text-sm text-gray-600">Systolic Blood Pressure:</p>
                                         <p class="font-medium">${bp.systolic} mmHg</p>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-600">فشار دیاستول:</p>
+                                        <p class="text-sm text-gray-600">Diastolic Blood Pressure:</p>
                                         <p class="font-medium">${bp.diastolic} mmHg</p>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-600">ضربان قلب:</p>
+                                        <p class="text-sm text-gray-600">Heart Rate:</p>
                                         <p class="font-medium">${bp.heart_rate} bpm</p>
                                     </div>
                                     ${bp.notes ? `
                                         <div class="col-span-2">
-                                            <p class="text-sm text-gray-600">یادداشت:</p>
+                                            <p class="text-sm text-gray-600">Notes:</p>
                                             <p class="font-medium">${bp.notes}</p>
                                         </div>
                                     ` : ''}
@@ -238,12 +238,12 @@ thead, tbody, tfoot, tr, td, th {
                     });
                     dataContainer.innerHTML = html;
                 } else {
-                    dataContainer.innerHTML = '<p class="text-red-500">خطا در دریافت اطلاعات</p>';
+                    dataContainer.innerHTML = '<p class="text-red-500">Error in retrieving data</p>';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                dataContainer.innerHTML = '<p class="text-red-500">خطا در دریافت اطلاعات</p>';
+                dataContainer.innerHTML = '<p class="text-red-500">Error in retrieving data</p>';
             });
     }
 
@@ -617,7 +617,7 @@ thead, tbody, tfoot, tr, td, th {
             <!-- Voice Recording Section -->
             <div class="mt-4">
                 <div class="bg-white rounded-lg shadow-sm p-4">
-                    <h3 class="text-lg font-semibold mb-4">ثبت توضیحات صوتی</h3>
+                    <h3 class="text-lg font-semibold mb-4">Record Voice Notes</h3>
                     <div
                         x-data="{
                             isRecording: false,
@@ -689,7 +689,7 @@ thead, tbody, tfoot, tr, td, th {
                                             console.log('Audio URL set:', this.audioUrl);
                                         } catch (error) {
                                             console.error('Error processing audio:', error);
-                                            alert('خطا در پردازش صدا.');
+                                            alert('Error processing audio.');
                                         }
 
                                         clearInterval(this.timerInterval);
@@ -698,7 +698,7 @@ thead, tbody, tfoot, tr, td, th {
                                     this.mediaRecorder.start(1000);
                                 } catch (error) {
                                     console.error('Error accessing microphone:', error);
-                                    alert('خطا در دسترسی به میکروفون. لطفا دسترسی میکروفون را فعال کنید.');
+                                    alert('Error accessing microphone. Please enable microphone access.');
                                 }
                             },
 
@@ -741,14 +741,14 @@ thead, tbody, tfoot, tr, td, th {
 
                                     const result = await response.json();
                                     if (result.success) {
-                                        alert('توضیحات صوتی با موفقیت ذخیره شد');
+                                        alert('Voice notes saved successfully');
                                         this.resetRecording();
                                     } else {
-                                        alert('خطا در ذخیره توضیحات صوتی');
+                                        alert('Error saving voice notes');
                                     }
                                 } catch (error) {
                                     console.error('Error saving recording:', error);
-                                    alert('خطا در ذخیره ضبط صدا');
+                                    alert('Error saving recording');
                                 }
                             },
 
@@ -776,7 +776,7 @@ thead, tbody, tfoot, tr, td, th {
                                 <svg class="w-5 h-5 ml-2 rtl:ml-reverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                                 </svg>
-                                شروع ضبط
+                                Start Recording
                             </button>
                             <button
                                 type="button"
@@ -788,7 +788,7 @@ thead, tbody, tfoot, tr, td, th {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                                 </svg>
-                                توقف ضبط
+                                Stop Recording
                             </button>
                             <span x-ref="timer" class="text-lg font-mono bg-gray-100 px-3 py-1 rounded">00:00</span>
                         </div>
@@ -796,13 +796,13 @@ thead, tbody, tfoot, tr, td, th {
                         <div x-show="audioUrl" class="space-y-4 mt-4">
                             <audio x-ref="audioPlayer" controls class="w-full" x-bind:src="audioUrl"></audio>
                             <div class="mt-4">
-                                <label for="voice_notes" class="block text-sm font-medium text-gray-700 mb-2">یادداشت پزشک</label>
+                                <label for="voice_notes" class="block text-sm font-medium text-gray-700 mb-2">Doctor's Notes</label>
                                 <textarea
                                     id="voice_notes"
                                     x-model="voiceNotes"
                                     rows="3"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    placeholder="توضیحات خود را اینجا وارد کنید..."
+                                    placeholder="Enter your notes here..."
                                 ></textarea>
                             </div>
                             <div class="flex justify-end mt-2">
@@ -814,7 +814,7 @@ thead, tbody, tfoot, tr, td, th {
                                     <svg class="w-5 h-5 ml-2 rtl:ml-reverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                     </svg>
-                                    ارسال پاسخ
+                                    Send Response
                                 </button>
                             </div>
                         </div>
@@ -829,14 +829,14 @@ thead, tbody, tfoot, tr, td, th {
     </div>
     @else
                                     <div class="container text-center">
-                                        <h4>اطلاعاتی یافت نشد</h4>
-                                        <h4>بیمار هنوز فشار خون جدیدی ثبت نکرده است</h4>
+                                        <h4>No Data Found</h4>
+                                        <h4>Patient has not recorded any blood pressure yet</h4>
                                     </div>
     @endif
       <!-- Last Doctor Voice Recordings Section -->
       <div class="mt-8">
             <div class="bg-white rounded-lg shadow-sm p-4">
-                <h3 class="text-lg font-semibold mb-4">توضیحات صوتی قبلی</h3>
+                <h3 class="text-lg font-semibold mb-4">Previous Voice Notes</h3>
                 <div class="space-y-4">
                     
 
@@ -856,19 +856,25 @@ thead, tbody, tfoot, tr, td, th {
                                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                             </svg>
-                                            مشاهده فشار خون
+                                            View Blood Pressure
                                         </button>
                                     </div>
                                 </div>
                                 <audio controls class="w-full">
                                     <source src="{{ asset('storage/' . $voice->voice_path) }}" type="audio/mpeg">
-                                    مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
+                                    Your browser does not support audio playback.
                                 </audio>
+                                @if($voice->notes)
+                                    <div class="mt-3 p-3 bg-gray-50 rounded-md">
+                                        <h3 class="text-sm font-medium text-gray-700 mb-1">Doctor's Notes:</h3>
+                                        <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ $voice->notes }}</p>
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     @else
                         <div class="text-center text-gray-500">
-                            هیچ توضیح صوتی قبلی وجود ندارد
+                            No previous voice notes available
                         </div>
                     @endif
                 </div>
@@ -879,7 +885,7 @@ thead, tbody, tfoot, tr, td, th {
         <div id="bloodPressureModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">اطلاعات فشار خون</h3>
+                    <h3 class="text-lg font-semibold">Blood Pressure Information</h3>
                     <button onclick="closeBloodPressureModal()" class="text-gray-500 hover:text-gray-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -967,7 +973,7 @@ thead, tbody, tfoot, tr, td, th {
                             console.log('Audio URL set:', this.audioUrl);
                         } catch (error) {
                             console.error('Error processing audio:', error);
-                            alert('خطا در پردازش صدا.');
+                            alert('Error processing audio.');
                         }
 
                         clearInterval(this.timerInterval);
@@ -976,7 +982,7 @@ thead, tbody, tfoot, tr, td, th {
                     this.mediaRecorder.start(1000);
                 } catch (error) {
                     console.error('Error accessing microphone:', error);
-                    alert('خطا در دسترسی به میکروفون. لطفا دسترسی میکروفون را فعال کنید.');
+                    alert('Error accessing microphone. Please enable microphone access.');
                 }
             },
 
@@ -1019,14 +1025,14 @@ thead, tbody, tfoot, tr, td, th {
 
                     const result = await response.json();
                     if (result.success) {
-                        alert('توضیحات صوتی با موفقیت ذخیره شد');
+                        alert('Voice notes saved successfully');
                         this.resetRecording();
                     } else {
-                        alert('خطا در ذخیره توضیحات صوتی');
+                        alert('Error saving voice notes');
                     }
                 } catch (error) {
                     console.error('Error saving recording:', error);
-                    alert('خطا در ذخیره ضبط صدا');
+                    alert('Error saving recording');
                 }
             },
 
