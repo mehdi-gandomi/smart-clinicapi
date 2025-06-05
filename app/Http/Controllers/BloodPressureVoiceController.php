@@ -16,7 +16,7 @@ class BloodPressureVoiceController extends Controller
                 $file = $request->file('voice');
                 $filename = uniqid('voice_') . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('public/voices', $filename);
-
+                $path=str_replace("public/","",$path);
                 BloodPressure::whereIn("id",explode(",",$request->blood_pressure_ids))->update([
                     'examined'=>1
                 ]);

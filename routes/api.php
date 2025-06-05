@@ -98,5 +98,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/financial/prices', [App\Http\Controllers\Api\FinancialController::class, 'getPrices']);
 
     Route::post('/doctor-blood-pressure-voice', [DoctorBloodPressureVoiceController::class, 'store']);
+
+    // Blood Pressure Voice Recordings
+    Route::get('/blood-pressure/voices', [App\Http\Controllers\Api\BloodPressureController::class, 'getVoiceRecordings']);
+    Route::get('/blood-pressure/data', [App\Http\Controllers\Api\BloodPressureController::class, 'getBloodPressureData']);
 });
 Route::any('/wallet/charge/callback/{transaction}', [WalletController::class, 'chargeCallback'])->name('wallet.charge.callback');

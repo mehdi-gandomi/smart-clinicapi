@@ -14,6 +14,7 @@ return new class extends Migration
             $table->unsignedBigInteger('doctor_id');
             $table->string('blood_pressure_ids');
             $table->string('voice_path');
+            $table->text('notes');
             $table->timestamps();
         });
     }

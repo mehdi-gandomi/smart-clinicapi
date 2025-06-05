@@ -152,8 +152,10 @@ class BloodPressureChart extends Widget
         $pp_std=$this->std_deviation($pps);
         $ci_std=$this->std_deviation($cis);
         $co_std=$this->std_deviation($cos);
-
-        return compact('maps','ids','dates','cos','cis','pps','sys_avg','hr_avg','dia_avg','dia_std','sys_std','hr_std','map_std','pp_std','ci_std','co_std','all_sys_data','all_dia_data','all_hr_data');
+        $voices = \App\Models\DoctorBloodPressureVoice::where('user_id', $this->record->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+        return compact('voices','maps','ids','dates','cos','cis','pps','sys_avg','hr_avg','dia_avg','dia_std','sys_std','hr_std','map_std','pp_std','ci_std','co_std','all_sys_data','all_dia_data','all_hr_data');
     }
 
     public function std_deviation($data)

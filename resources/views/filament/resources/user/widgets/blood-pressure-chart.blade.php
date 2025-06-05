@@ -189,7 +189,80 @@ thead, tbody, tfoot, tr, td, th {
 }
       </style>
 <script>
+    function showBloodPressureData(ids) {
+        const modal = document.getElementById('bloodPressureModal');
+        const dataContainer = document.getElementById('bloodPressureData');
+        
+        // Show modal
+        modal.classList.remove('hidden');
+        
+        // Fetch blood pressure data
+        fetch(`/api/blood-pressure/data?ids=${ids}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    let html = '';
+                    data.data.forEach(bp => {
+                        html += `
+                            <div class="border rounded-lg p-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">تاریخ:</p>
+                                        <p class="font-medium">${new Date(bp.date).toLocaleDateString('fa-IR')}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">ساعت:</p>
+                                        <p class="font-medium">${new Date(bp.date).toLocaleTimeString('fa-IR')}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">فشار سیستول:</p>
+                                        <p class="font-medium">${bp.systolic} mmHg</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">فشار دیاستول:</p>
+                                        <p class="font-medium">${bp.diastolic} mmHg</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">ضربان قلب:</p>
+                                        <p class="font-medium">${bp.heart_rate} bpm</p>
+                                    </div>
+                                    ${bp.notes ? `
+                                        <div class="col-span-2">
+                                            <p class="text-sm text-gray-600">یادداشت:</p>
+                                            <p class="font-medium">${bp.notes}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    dataContainer.innerHTML = html;
+                } else {
+                    dataContainer.innerHTML = '<p class="text-red-500">خطا در دریافت اطلاعات</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                dataContainer.innerHTML = '<p class="text-red-500">خطا در دریافت اطلاعات</p>';
+            });
+    }
 
+    function closeBloodPressureModal() {
+        const modal = document.getElementById('bloodPressureModal');
+        modal.classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('bloodPressureModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeBloodPressureModal();
+                }
+            });
+        }
+    });
 </script>
     @if(count($all_dia_data) > 0)
     <div class="container">
@@ -256,15 +329,15 @@ thead, tbody, tfoot, tr, td, th {
                                 SYS (mmHg)
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $sys_avg }}
+                                {{ round($sys_avg, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $sys_std }} </td>
+                                {{ round($sys_std, 1) }} </td>
                             <td class="border-end-0 border-start-0">
-                                {{ max_number($all_sys_data) }}
+                                {{ round(max_number($all_sys_data), 1) }}
                             </td>
                             <td class=" border-start-0">
-                                {{ min_number($all_sys_data) }}
+                                {{ round(min_number($all_sys_data), 1) }}
                             </td>
                         </tr>
                         <tr>
@@ -272,16 +345,16 @@ thead, tbody, tfoot, tr, td, th {
                                 DIA (mmHg)
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $dia_avg }}
+                                {{ round($dia_avg, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $dia_std }}
+                                {{ round($dia_std, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ max_number($all_dia_data) }}
+                                {{ round(max_number($all_dia_data), 1) }}
                             </td>
                             <td class=" border-start-0">
-                                {{ min_number($all_dia_data) }}
+                                {{ round(min_number($all_dia_data), 1) }}
                             </td>
                         </tr>
                         <tr>
@@ -289,16 +362,16 @@ thead, tbody, tfoot, tr, td, th {
                                 HR (bpm)
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $hr_avg }}
+                                {{ round($hr_avg, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $hr_std }}
+                                {{ round($hr_std, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ max_number($all_hr_data) }}
+                                {{ round(max_number($all_hr_data), 1) }}
                             </td>
                             <td class=" border-start-0">
-                                {{ min_number($all_hr_data) }}
+                                {{ round(min_number($all_hr_data), 1) }}
                             </td>
                         </tr>
                         <tr>
@@ -306,10 +379,10 @@ thead, tbody, tfoot, tr, td, th {
                                 MAP (mmHg)
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ avg($maps) }}
+                                {{ round(avg($maps), 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $map_std }}
+                                {{ round($map_std, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
                                 {{ number_format(max_number($maps), 1) }}
@@ -323,10 +396,10 @@ thead, tbody, tfoot, tr, td, th {
                                 PP (mmHg)
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ avg($pps) }}
+                                {{ round(avg($pps), 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $pp_std }}
+                                {{ round($pp_std, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
                                 {{ number_format(max_number($pps), 1) }}
@@ -340,10 +413,10 @@ thead, tbody, tfoot, tr, td, th {
                                 CO (l/min)
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ avg($cos) }}
+                                {{ round(avg($cos), 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $co_std }}
+                                {{ round($co_std, 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
                                 {{ number_format(max_number($cos), 1) }}
@@ -357,10 +430,10 @@ thead, tbody, tfoot, tr, td, th {
                                 CI (l/min/m2)
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ avg($cis) }}
+                                {{ round(avg($cis), 1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
-                                {{ $ci_std }}
+                                {{ round($ci_std,1) }}
                             </td>
                             <td class="border-end-0 border-start-0">
                                 {{ number_format(max_number($cis), 1) }}
@@ -556,10 +629,12 @@ thead, tbody, tfoot, tr, td, th {
                             duration: 0,
                             audioChunks: [],
                             mimeType: '',
+                            voiceNotes: '',
 
                             async startRecording() {
                                 try {
-                                    this.audioUrl = null; // Reset audioUrl when starting new recording
+                                    this.audioUrl = null;
+                                    this.voiceNotes = '';
                                     this.audioStream = await navigator.mediaDevices.getUserMedia({
                                         audio: {
                                             echoCancellation: true,
@@ -611,7 +686,7 @@ thead, tbody, tfoot, tr, td, th {
                                         try {
                                             const audioBlob = new Blob(this.audioChunks, { type: this.mimeType });
                                             this.audioUrl = URL.createObjectURL(audioBlob);
-                                            console.log('Audio URL set:', this.audioUrl); // Debug log
+                                            console.log('Audio URL set:', this.audioUrl);
                                         } catch (error) {
                                             console.error('Error processing audio:', error);
                                             alert('خطا در پردازش صدا.');
@@ -646,14 +721,16 @@ thead, tbody, tfoot, tr, td, th {
 
                             async saveRecording() {
                                 try {
-                                  const preferredMimeType = MediaRecorder.isTypeSupported('audio/mp3') ? 'audio/mp3' : 'audio/webm';
+                                    const preferredMimeType = MediaRecorder.isTypeSupported('audio/mp3') ? 'audio/mp3' : 'audio/webm';
                                     const audioBlob = new Blob(this.audioChunks, { type: preferredMimeType });
 
-                                    const extension = preferredMimeType.split('/')[1]; // استخراج mp3 یا webm
+                                    const extension = preferredMimeType.split('/')[1];
                                     const formData = new FormData();
                                     formData.append('voice', audioBlob, `voice.${extension}`);
-                                    formData.append('user_id','{{$this->record->id}}');
-                                    formData.append('blood_pressure_ids','{{$ids}}');
+                                    formData.append('user_id', '{{$this->record->id}}');
+                                    formData.append('blood_pressure_ids', '{{$ids}}');
+                                    formData.append('notes', this.voiceNotes);
+
                                     const response = await fetch('/blood-pressure/upload-voice', {
                                         method: 'POST',
                                         headers: {
@@ -663,13 +740,12 @@ thead, tbody, tfoot, tr, td, th {
                                     });
 
                                     const result = await response.json();
-          if (result.success) {
-            alert('توضیحات صوتی با موفقیت ذخیره شد');
-            this.resetRecording();
-        } else {
-            alert('خطا در ذخیره توضیحات صوتی');
-        }                            
-                                    
+                                    if (result.success) {
+                                        alert('توضیحات صوتی با موفقیت ذخیره شد');
+                                        this.resetRecording();
+                                    } else {
+                                        alert('خطا در ذخیره توضیحات صوتی');
+                                    }
                                 } catch (error) {
                                     console.error('Error saving recording:', error);
                                     alert('خطا در ذخیره ضبط صدا');
@@ -680,6 +756,7 @@ thead, tbody, tfoot, tr, td, th {
                                 this.audioUrl = null;
                                 this.audioChunks = [];
                                 this.duration = 0;
+                                this.voiceNotes = '';
                                 this.$refs.timer.textContent = '00:00';
 
                                 if (this.audioStream) {
@@ -718,6 +795,16 @@ thead, tbody, tfoot, tr, td, th {
 
                         <div x-show="audioUrl" class="space-y-4 mt-4">
                             <audio x-ref="audioPlayer" controls class="w-full" x-bind:src="audioUrl"></audio>
+                            <div class="mt-4">
+                                <label for="voice_notes" class="block text-sm font-medium text-gray-700 mb-2">یادداشت پزشک</label>
+                                <textarea
+                                    id="voice_notes"
+                                    x-model="voiceNotes"
+                                    rows="3"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    placeholder="توضیحات خود را اینجا وارد کنید..."
+                                ></textarea>
+                            </div>
                             <div class="flex justify-end mt-2">
                                 <button
                                     type="button"
@@ -737,11 +824,224 @@ thead, tbody, tfoot, tr, td, th {
         </div>
         </div>
 
+      
+
     </div>
     @else
                                     <div class="container text-center">
                                         <h4>اطلاعاتی یافت نشد</h4>
+                                        <h4>بیمار هنوز فشار خون جدیدی ثبت نکرده است</h4>
                                     </div>
     @endif
+      <!-- Last Doctor Voice Recordings Section -->
+      <div class="mt-8">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">توضیحات صوتی قبلی</h3>
+                <div class="space-y-4">
+                    
 
+                    @if($voices->count() > 0)
+                        @foreach($voices as $voice)
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <div class="flex items-center space-x-4 rtl:space-x-reverse">
+                                        <span class="text-sm text-gray-600">
+                                            {{ \Carbon\Carbon::parse($voice->created_at)->toJalali()->formatJalaliDateTime() }}
+                                        </span>
+                                        <button 
+                                            type="button"
+                                            onclick="showBloodPressureData('{{ $voice->blood_pressure_ids }}')"
+                                            class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md  bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        >
+                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                            </svg>
+                                            مشاهده فشار خون
+                                        </button>
+                                    </div>
+                                </div>
+                                <audio controls class="w-full">
+                                    <source src="{{ asset('storage/' . $voice->voice_path) }}" type="audio/mpeg">
+                                    مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
+                                </audio>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-gray-500">
+                            هیچ توضیح صوتی قبلی وجود ندارد
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Blood Pressure Data Modal -->
+        <div id="bloodPressureModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">اطلاعات فشار خون</h3>
+                    <button onclick="closeBloodPressureModal()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="bloodPressureData" class="space-y-4">
+                    <!-- Data will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
 </x-filament::widget>
+
+@push('scripts')
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('voiceRecorder', () => ({
+            isRecording: false,
+            mediaRecorder: null,
+            audioStream: null,
+            audioUrl: null,
+            startTime: null,
+            timerInterval: null,
+            duration: 0,
+            audioChunks: [],
+            mimeType: '',
+            voiceNotes: '',
+
+            async startRecording() {
+                try {
+                    this.audioUrl = null;
+                    this.voiceNotes = '';
+                    this.audioStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            channelCount: 1
+                        }
+                    });
+
+                    const mimeTypes = [
+                        'audio/webm;codecs=opus',
+                        'audio/webm',
+                        'audio/ogg;codecs=opus',
+                        'audio/ogg',
+                        'audio/mp4;codecs=mp4a',
+                        'audio/mp4',
+                        'audio/aac',
+                        'audio/wav',
+                        ''
+                    ];
+
+                    this.mimeType = '';
+                    for (let type of mimeTypes) {
+                        if (MediaRecorder.isTypeSupported(type)) {
+                            this.mimeType = type;
+                            console.log(`Using MIME type: ${type}`);
+                            break;
+                        }
+                    }
+
+                    const options = {
+                        mimeType: this.mimeType,
+                        audioBitsPerSecond: 96000
+                    };
+
+                    this.mediaRecorder = new MediaRecorder(this.audioStream, options);
+
+                    this.audioChunks = [];
+                    this.startTime = Date.now();
+                    this.duration = 0;
+                    this.updateTimer();
+                    this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+                    this.isRecording = true;
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        this.audioChunks.push(event.data);
+                    };
+
+                    this.mediaRecorder.onstop = async () => {
+                        try {
+                            const audioBlob = new Blob(this.audioChunks, { type: this.mimeType });
+                            this.audioUrl = URL.createObjectURL(audioBlob);
+                            console.log('Audio URL set:', this.audioUrl);
+                        } catch (error) {
+                            console.error('Error processing audio:', error);
+                            alert('خطا در پردازش صدا.');
+                        }
+
+                        clearInterval(this.timerInterval);
+                    };
+
+                    this.mediaRecorder.start(1000);
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    alert('خطا در دسترسی به میکروفون. لطفا دسترسی میکروفون را فعال کنید.');
+                }
+            },
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.audioStream.getTracks().forEach(track => track.stop());
+                    this.isRecording = false;
+                    clearInterval(this.timerInterval);
+                }
+            },
+
+            updateTimer() {
+                const now = Date.now();
+                this.duration = Math.floor((now - this.startTime) / 1000);
+                const minutes = Math.floor(this.duration / 60);
+                const seconds = this.duration % 60;
+                this.$refs.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            },
+
+            async saveRecording() {
+                try {
+                    const preferredMimeType = MediaRecorder.isTypeSupported('audio/mp3') ? 'audio/mp3' : 'audio/webm';
+                    const audioBlob = new Blob(this.audioChunks, { type: preferredMimeType });
+
+                    const extension = preferredMimeType.split('/')[1];
+                    const formData = new FormData();
+                    formData.append('voice', audioBlob, `voice.${extension}`);
+                    formData.append('user_id', '{{$this->record->id}}');
+                    formData.append('blood_pressure_ids', '{{$ids}}');
+                    formData.append('notes', this.voiceNotes);
+
+                    const response = await fetch('/blood-pressure/upload-voice', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('توضیحات صوتی با موفقیت ذخیره شد');
+                        this.resetRecording();
+                    } else {
+                        alert('خطا در ذخیره توضیحات صوتی');
+                    }
+                } catch (error) {
+                    console.error('Error saving recording:', error);
+                    alert('خطا در ذخیره ضبط صدا');
+                }
+            },
+
+            resetRecording() {
+                this.audioUrl = null;
+                this.audioChunks = [];
+                this.duration = 0;
+                this.voiceNotes = '';
+                this.$refs.timer.textContent = '00:00';
+
+                if (this.audioStream) {
+                    this.audioStream.getTracks().forEach(track => track.stop());
+                }
+            }
+        }));
+    });
+</script>
+@endpush

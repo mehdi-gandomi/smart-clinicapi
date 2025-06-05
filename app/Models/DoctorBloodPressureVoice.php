@@ -11,6 +11,7 @@ class DoctorBloodPressureVoice extends Model
         'user_id',
         'doctor_id',
         'voice_path',
+        'notes',
         'blood_pressure_ids'
     ];
 
