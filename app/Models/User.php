@@ -39,6 +39,7 @@ class User extends Authenticatable implements FilamentUser
         'supplementary_insurance',
         'occupation',
         'address',
+        'doctor',
     ];
 
     /**
@@ -87,5 +88,13 @@ class User extends Authenticatable implements FilamentUser
     }
     public function bloodPressures(){
         return $this->hasMany(BloodPressure::class);
+    }
+
+    /**
+     * Get the doctor profile associated with the user.
+     */
+    public function doctor()
+    {
+        return $this->hasOne(Doctor::class);
     }
 }

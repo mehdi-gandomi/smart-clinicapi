@@ -27,10 +27,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::prefix('auth')->group(function () {
-    Route::get('google', [AuthController::class, 'redirectToGoogle']);
-    Route::get('google/callback', [AuthController::class, 'handleGoogleCallback']);
-});
+// Route::prefix('auth')->group(function () {
+//     Route::get('google', [AuthController::class, 'redirectToGoogle']);
+//     Route::get('google/callback', [AuthController::class, 'handleGoogleCallback']);
+// });
 
 Route::get('auth/google', [GoogleController::class, 'redirect'])
     ->name('google.redirect');

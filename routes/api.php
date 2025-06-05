@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\OnlineVisitController;
 use App\Http\Controllers\Api\WalletController;
 use App\Models\Wallet;
 use App\Http\Controllers\Api\DoctorBloodPressureVoiceController;
+use App\Http\Controllers\Api\DoctorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,5 +103,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // Blood Pressure Voice Recordings
     Route::get('/blood-pressure/voices', [App\Http\Controllers\Api\BloodPressureController::class, 'getVoiceRecordings']);
     Route::get('/blood-pressure/data', [App\Http\Controllers\Api\BloodPressureController::class, 'getBloodPressureData']);
+
+    
 });
+Route::get('/doctors/{slug}', [DoctorController::class, 'getBySlug']);
 Route::any('/wallet/charge/callback/{transaction}', [WalletController::class, 'chargeCallback'])->name('wallet.charge.callback');
