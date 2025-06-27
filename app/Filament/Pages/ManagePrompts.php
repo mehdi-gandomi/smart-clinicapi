@@ -37,4 +37,8 @@ class ManagePrompts extends SettingsPage
                 ->helperText('Template prompt used for full analysis'),
         ]);
     }
+    public static function canAccess(): bool
+    {
+        return auth()->user()->user_type == 'admin';
+    }
 }

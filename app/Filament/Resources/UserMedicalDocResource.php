@@ -24,6 +24,10 @@ class UserMedicalDocResource extends Resource
     protected static ?string $navigationGroup = 'Docs management';
     protected static ?string $label = 'Doc';
     protected static ?string $pluralLabel = 'Medical docs';
+    public static function canViewAny(): bool
+    {
+        return false;
+    }
     public static function canCreate(): bool
     {
         return false;

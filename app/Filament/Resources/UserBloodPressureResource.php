@@ -106,4 +106,10 @@ class UserBloodPressureResource extends Resource
             'view' => Pages\ViewUserBloodPressure::route('/{record}'),
         ];
     }
+    public static function getNavigationBadge(): ?string { 
+        return (string) User::count();
+    }
+    public static function getNavigationSort(): ?int { 
+        return 0;
+     }
 } 

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BloodPressureVoiceController;
+use App\Http\Controllers\BloodPressureViewController;
 use App\Jobs\ProcessGptAssessment;
 use App\Models\User;
 use App\Models\UserAssessment;
@@ -40,3 +41,4 @@ Route::get('dispatch/{id}', function($id){
     $assessment=UserAssessment::find($id);
     ProcessGptAssessment::dispatch($assessment,User::first());
 });
+Route::get('/blood-pressure/view', [BloodPressureViewController::class, 'show'])->name('blood-pressure.view');

@@ -13,8 +13,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('doctor_id');
             $table->string('blood_pressure_ids');
-            $table->string('voice_path');
-            $table->text('notes');
+            $table->string('voice_path')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

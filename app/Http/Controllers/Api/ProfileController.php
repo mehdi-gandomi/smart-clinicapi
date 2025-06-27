@@ -23,15 +23,15 @@ class ProfileController extends Controller
             'first_name' => 'sometimes|string|max:255',
             'last_name' => 'sometimes|string|max:255',
             'name' => 'sometimes|string|max:255',
-            'national_id' => 'sometimes|string|max:255',
+            'national_id' => 'nullable|string|max:255',
             'gender' => 'sometimes',
             'age' => 'sometimes|integer|nullable',
-            'height' => 'sometimes|integer|nullable',
-            'weight' => 'sometimes|integer|nullable',
-            'primary_insurance' => 'sometimes',
-            'supplementary_insurance' => 'sometimes',
-            'occupation' => 'sometimes',
-            'address' => 'sometimes'
+            'height' => 'nullable|integer|nullable',
+            'weight' => 'nullable|integer|nullable',
+            'primary_insurance' => 'nullable',
+            'supplementary_insurance' => 'nullable',
+            'occupation' => 'nullable',
+            'address' => 'nullable'
         ]);
 
         if ($validator->fails()) {

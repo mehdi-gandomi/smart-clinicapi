@@ -22,7 +22,7 @@ class OnlineVisitResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';
 
-    protected static ?string $navigationGroup = 'Patient Management';
+    // protected static ?string $navigationGroup = 'Patient Management';
 
     protected static ?string $navigationLabel = 'Online Visits';
 
@@ -191,4 +191,10 @@ class OnlineVisitResource extends Resource
             'edit' => Pages\EditOnlineVisit::route('/{record}/edit'),
         ];
     }
+    public static function getNavigationBadge(): ?string { 
+        return (string) OnlineVisit::count();
+    }
+    public static function getNavigationSort(): ?int { 
+        return 2;
+     }
 }

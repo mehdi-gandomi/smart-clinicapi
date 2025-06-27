@@ -99,14 +99,15 @@ class WalletController extends Controller
             'amount' => 'required|integer|min:1000',
             'description' => 'nullable|string'
         ]);
-
+        $doctorName=$request->header('X-Doctor-Name');
+        
         $wallet = Auth::user()->wallet ?? Wallet::create(['user_id' => Auth::id()]);
         $transaction = $wallet->transactions()->create([
             'amount' => $request->amount,
             'description' => $request->description ?? 'شارژ کیف پول',
             'status' => 'pending'
         ]);
-        return Payment::callbackUrl(route('wallet.charge.callback', $transaction->id))->purchase(
+        return Payment::callbackUrl(route('wallet.charge.callback', ['transaction'=>$transaction->id,'doctor'=>$doctorName]))->purchase(
             (new Invoice)
             ->amount($request->amount),
             function($driver, $transactionId)use($transaction) {
@@ -120,7 +121,7 @@ class WalletController extends Controller
     }
 
 
-    public function chargeCallback(Request $request, WalletTransaction $transaction)
+    public function chargeCallback(Request $request, WalletTransaction $transaction,$doctor)
     {
 
         if($transaction->status == 'completed'){
@@ -137,7 +138,7 @@ class WalletController extends Controller
                 'status' => 'completed',
                 'reference_id' => $referenceId,
             ]);
-            return redirect(env('FRONTEND_URL') . '/dashboard/wallet/callback?transaction_id=' . $transaction->transaction_id . '&status=success');
+            return redirect(env('FRONTEND_URL').'/'.$doctor . '/dashboard/wallet/callback?transaction_id=' . $transaction->transaction_id . '&status=success');
 
         } catch (InvalidPaymentException $exception) {
             /**
@@ -146,7 +147,7 @@ class WalletController extends Controller
                 getMessage method, returns a suitable message that can be used in user interface.
             **/
 
-            return redirect(env('FRONTEND_URL') . '/dashboard/wallet/callback?transaction_id=' . $transaction->transaction_id . '&status=failed&message='.$exception->getMessage());
+            return redirect(env('FRONTEND_URL').'/'.$doctor . '/dashboard/wallet/callback?transaction_id=' . $transaction->transaction_id . '&status=failed&message='.$exception->getMessage());
         }
     }
 
@@ -163,10 +164,11 @@ class WalletController extends Controller
             // Create a pending wallet transaction
             $transaction = WalletTransaction::create([
                 'user_id' => $user->id,
+                'type'=>'credit',
                 'amount' => $request->amount,
                 'description' => $request->description ?? 'شارژ کیف پول',
                 'status' => 'pending',
-                'order_id' => Str::random(32), // Generate a unique order ID
+                'transaction_id' => Str::random(32), // Generate a unique transaction ID
             ]);
 
             // Get payment URL from your payment gateway

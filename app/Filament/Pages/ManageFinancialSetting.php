@@ -41,4 +41,8 @@ class ManageFinancialSetting extends SettingsPage
                     ->columns(2),
             ]);
     }
+    public static function canAccess(): bool
+{
+    return auth()->user()->user_type == 'admin';
+}
 }
